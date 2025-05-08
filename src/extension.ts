@@ -27,7 +27,7 @@ export function activate(context: vscode.ExtensionContext) {
 			// 設定からテンプレートのリストを読み込む
 			const config = vscode.workspace.getConfiguration('MyNewFileTemplate');
 			const templates = config.get<TemplateConfig[]>('Templates', []); // 'Templates'設定を取得。型はTemplateConfigの配列([])、デフォルト値は空配列
-			const hiddenTemplates = config.get<string[]>('HiddenArray', []);
+			const hiddenTemplates = context.workspaceState.get<string[]>('HiddenArray', []);
 
 			// 非表示テンプレートを除外して、表示するテンプレートリストを作成
 			const visibleTemplates = templates.filter(template =>
@@ -87,7 +87,7 @@ export function activate(context: vscode.ExtensionContext) {
 			// 全てのテンプレートを読み込む (非表示設定はまだ考慮しない)
 			const allTemplateConfigs = config.get<TemplateConfig[]>('Templates', []);
 			// ★現在のワークスペース設定から非表示リストを読み込む★
-			const currentHiddenTemplates = config.get<string[]>('HiddenArray', []);
+			const currentHiddenTemplates = context.workspaceState.get<string[]>('HiddenArray', []);
 			if (!allTemplateConfigs || allTemplateConfigs.length === 0) {
 				vscode.window.showErrorMessage('設定にファイルテンプレートが定義されていません。非表示/表示設定を行えません。');
 				return;
@@ -114,10 +114,9 @@ export function activate(context: vscode.ExtensionContext) {
 				.filter(item => !namesToShow.includes(item));
 
 			try {
-				await config.update(
+				await context.workspaceState.update(
 					'HiddenArray', // 更新する設定項目のキー
 					namesToHide,       // 更新する値 (非表示にしたいテンプレート名の配列)
-					vscode.ConfigurationTarget.Workspace // ワークスペース設定として保存
 				);
 				vscode.window.showInformationMessage('ワークスペースのテンプレート表示設定を更新しました。');
 			} catch (error: any) {

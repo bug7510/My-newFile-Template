@@ -17,7 +17,7 @@
       "properties": {
         "MyNewFileTemplate.Templates": {
           "type": "array",
-          "description": "ファイル作成時に参照するテンプレートを設定できます。\n{filePath[0]}は入力したファイル名。\n{filePath[1]}はファイルが作成されるフォルダ名。\n{filePath[2]}はその上のフォルダ、{filePath[3]}はその上の……",
+          "markdownDescription": "ファイル作成時に参照するテンプレートを設定できます。\n\n\n\n\n{filePath[0]}は入力したファイル名。\n{filePath[1]}はファイルが作成されるフォルダ名。\n{filePath[2]}はその上のフォルダ、{filePath[3]}はその上の……\n\n[ワークスペースのテンプレート表示設定](command:MyNewFileTemplate.hideTemplateInWorkspace)",
           "default": [
             {
               "templateName": "空のテキストファイル",
@@ -71,15 +71,6 @@
             ],
             "additionalProperties": false
           }
-        },
-        "MyNewFileTemplate.HiddenArray": {
-          "type": "array",
-          "description": "現在のワークスペースでクイックピックに表示しないテンプレートの名前リスト。",
-          "items": {
-            "type": "string"
-          },
-          "scope": "resource",
-          "default": []
         }
       }
     },
