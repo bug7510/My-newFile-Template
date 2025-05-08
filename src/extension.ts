@@ -16,7 +16,7 @@ interface TemplateConfig {
 export function activate(context: vscode.ExtensionContext) {
 
 	// package.jsonで定義したコマンドを登録します
-	let disposable = vscode.commands.registerCommand(
+	let createFileDisposable = vscode.commands.registerCommand(
 		'MyNewFileTemplate.create', // package.jsonで定義したコマンドIDと一致させる
 		async (uri: vscode.Uri) => { // コマンドが実行されるときに渡される引数。contextメニューからは選択されたリソースのURIが渡されます。
 
@@ -27,14 +27,20 @@ export function activate(context: vscode.ExtensionContext) {
 			// 設定からテンプレートのリストを読み込む
 			const config = vscode.workspace.getConfiguration('MyNewFileTemplate');
 			const templates = config.get<TemplateConfig[]>('Templates', []); // 'Templates'設定を取得。型はTemplateConfigの配列([])、デフォルト値は空配列
+			const hiddenTemplates = config.get<string[]>('HiddenArray', []);
 
-			if (!templates || templates.length === 0) {
+			// 非表示テンプレートを除外して、表示するテンプレートリストを作成
+			const visibleTemplates = templates.filter(template =>
+				!hiddenTemplates.includes(template.templateName) // hiddenTemplates リストに含まれていないテンプレートのみを残す
+			);
+
+			if (!visibleTemplates || visibleTemplates.length === 0) {
 				vscode.window.showErrorMessage('設定にファイルテンプレートが定義されていません。');
 				return;
 			}
 
 
-			const pickItems = templates.map(template => ({
+			const pickItems = visibleTemplates.map(template => ({
 				label: template.templateName, // クイックピックに表示するテキスト
 				description: template.filename, // テキストの下に表示する補足 (任意)
 				templateConfig: template // 選択されたときに参照できるようにテンプレートオブジェクト自体を持たせておく
@@ -70,8 +76,60 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	);
 
+	let hideTemplateDisposable = vscode.commands.registerCommand(
+		'MyNewFileTemplate.hideTemplateInWorkspace',
+		async (uri: vscode.Uri) => {
+			if (!vscode.workspace.workspaceFolders) {
+				vscode.window.showErrorMessage('このコマンドはワークスペース内で実行してください。');
+				return;
+			}
+			const config = vscode.workspace.getConfiguration('MyNewFileTemplate');
+			// 全てのテンプレートを読み込む (非表示設定はまだ考慮しない)
+			const allTemplateConfigs = config.get<TemplateConfig[]>('Templates', []);
+			// ★現在のワークスペース設定から非表示リストを読み込む★
+			const currentHiddenTemplates = config.get<string[]>('HiddenArray', []);
+			if (!allTemplateConfigs || allTemplateConfigs.length === 0) {
+				vscode.window.showErrorMessage('設定にファイルテンプレートが定義されていません。非表示/表示設定を行えません。');
+				return;
+			}
+			// クイックピックの項目を作成（全てのテンプレートを対象）
+			// 既に非表示のものはチェックマークをつけておく
+			const pickItems = allTemplateConfigs.map(templateConfig => ({
+				label: templateConfig.templateName,
+				description: templateConfig.filename, // 補足情報
+				picked: !(currentHiddenTemplates.includes(templateConfig.templateName)), // ★既に非表示ならチェックマークをつける★
+				templateConfig: templateConfig // 後で使うテンプレート名を保存しておく
+			}));
+
+			const selectedItems = await vscode.window.showQuickPick(pickItems, {
+				placeHolder: 'ワークスペースで非表示/表示を切り替えるテンプレートを選択してください (複数選択可)',
+				canPickMany: true // ★複数選択を許可★
+			});
+
+			if (selectedItems === undefined) return;
+
+			// 選択された項目 (チェックマークがついた項目) のテンプレート名リストを作成
+			const namesToShow = selectedItems.map(item => item.label);
+			const namesToHide = allTemplateConfigs.map(item => item.templateName)
+				.filter(item => !namesToShow.includes(item));
+
+			try {
+				await config.update(
+					'HiddenArray', // 更新する設定項目のキー
+					namesToHide,       // 更新する値 (非表示にしたいテンプレート名の配列)
+					vscode.ConfigurationTarget.Workspace // ワークスペース設定として保存
+				);
+				vscode.window.showInformationMessage('ワークスペースのテンプレート表示設定を更新しました。');
+			} catch (error: any) {
+				vscode.window.showErrorMessage(`ワークスペース設定の更新に失敗しました: ${error.message}`);
+				console.error('設定更新エラー:', error);
+			}
+
+		}
+	)
 	// 拡張機能が非アクティブになる際に登録したコマンドを解放
-	context.subscriptions.push(disposable);
+	context.subscriptions.push(createFileDisposable);
+	context.subscriptions.push(hideTemplateDisposable);
 }
 
 function replaceAllFilePath(targetText: string, folderPath: string, fileName: string) {
