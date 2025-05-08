@@ -99,7 +99,7 @@
       },
       {
         "command": "fileCreator.hideTemplateInWorkspace",
-        "title": "このワークスペースでのテンプレート表示設定"
+        "title": "ワークスペース内のテンプレート表示設定"
       }
     ]
   },
