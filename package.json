@@ -13,7 +13,7 @@
   "main": "./dist/extension.js",
   "contributes": {
     "configuration": {
-      "title": "TemplatesSettings",
+      "title": "MyNewFileTemplate",
       "properties": {
         "MyNewFileTemplate.Templates": {
           "type": "array",
@@ -71,6 +71,15 @@
             ],
             "additionalProperties": false
           }
+        },
+        "MyNewFileTemplate.whiteList": {
+          "type": "array",
+          "description": "現在のワークスペースでクイックピックに表示しないテンプレートの名前リスト。",
+          "items": {
+            "type": "string"
+          },
+          "scope": "resource",
+          "default": []
         }
       }
     },
@@ -87,6 +96,10 @@
       {
         "command": "MyNewFileTemplate.create",
         "title": "テンプレートから選択"
+      },
+      {
+        "command": "fileCreator.hideTemplateInWorkspace",
+        "title": "このワークスペースでのテンプレート表示設定"
       }
     ]
   },
