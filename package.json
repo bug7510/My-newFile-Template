@@ -12,6 +12,52 @@
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
+    "configuration": {
+      "title": "Templates Settings",
+      "properties": {
+        "Templates": {
+          "type": "array",
+          "description": "ファイル作成時に参照するテンプレートを設定できます。",
+          "default": [
+            {
+              "templateName": "空のファイル",
+              "filename": "{filePath[0]}.txt",
+              "template": ""
+            },
+            {
+              "templateName": "HTMLボイラープレート",
+              "filename": "{filePath[0]}.html",
+              "template": "<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"utf-8\">\n    <title></title>\n</head>\n<body>\n\n</body>\n</html>"
+            },
+            {
+              "templateName": "Markdownドキュメント",
+              "filename": "{filePath[0]}.md",
+              "template": "# タイトル\n\n本文\n"
+            }
+          ],
+          "items": {
+            "type": "object",
+            "properties": {
+              "templateName": {
+                "type": "string",
+                "description": "クイックピックに表示されるテンプレートの名前。",
+                "default": "新しいテンプレート"
+              },
+              "filename": {
+                "type": "string",
+                "description": "このテンプレートで作成されるファイルのデフォルト名。",
+                "default": "{filePath[0]}.txt"
+              },
+              "template": {
+                "type": "string",
+                "description": "作成されるファイルのデフォルトの内容。",
+                "default": ""
+              }
+            }
+          }
+        }
+      }
+    },
     "submenus": [
       {
         "id": "NewFileTemplates",
