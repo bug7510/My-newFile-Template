@@ -72,7 +72,7 @@
             "additionalProperties": false
           }
         },
-        "MyNewFileTemplate.hiddenArray": {
+        "MyNewFileTemplate.HiddenArray": {
           "type": "array",
           "description": "現在のワークスペースでクイックピックに表示しないテンプレートの名前リスト。",
           "items": {
@@ -98,7 +98,7 @@
         "title": "テンプレートから選択"
       },
       {
-        "command": "fileCreator.hideTemplateInWorkspace",
+        "command": "MyNewFileTemplate.hideTemplateInWorkspace",
         "title": "ワークスペース内のテンプレート表示設定"
       }
     ]
