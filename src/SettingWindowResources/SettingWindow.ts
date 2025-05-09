@@ -13,12 +13,12 @@ const PLACEHOLDER = "{cspSource}";
  * @param initialConfig - ウィンドウを開いたときに入力フォームに表示される初期値。Webview側で準備ができてから送信される。
  * @returns 決定ボタンが押された場合は入力された値を含むPromise、キャンセルされた場合は undefined を返すPromise。
  */
-async function showTemplateEditWindow(initialConfig: TemplateConfig | undefined, context: vscode.ExtensionContext): Promise<TemplateConfig | undefined> {
+export async function showTemplateEditWindow(context: vscode.ExtensionContext, initialConfig: TemplateConfig | undefined = undefined): Promise<TemplateConfig | undefined> {
 
     const windowResourcesFolderPath = path.join(context.extensionPath, 'src', 'SettingWindowResources');
     const panel = vscode.window.createWebviewPanel(
         'templateEdit', // パネルの識別子 (内部用)
-        'テンプレート設定の編集', // パネルのタイトル
+        'templateSettings', // パネルのタイトル
         vscode.ViewColumn.Beside, // パネルを表示するエディタ列 (例: 現在のアクティブな列)
         {
             // Webviewの設定を有効化

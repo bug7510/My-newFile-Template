@@ -1,0 +1,90 @@
+body {
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    font-family: var(--vscode-editor-font-family);
+    font-size: var(--vscode-editor-font-size);
+    font-weight: var(--vscode-editor-font-weight);
+}
+
+h1,
+h2,
+h3 {
+    background-color: var(--vscode-sideBar-background);
+    color: var(--vscode-sideBar-foreground);
+    flex-shrink: 0;
+    /* 高さを固定し、textareaが収縮するのを防ぐ */
+}
+
+label {
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    font-family: var(--vscode-editor-font-family);
+    font-size: var(--vscode-editor-font-size);
+    font-weight: var(--vscode-editor-font-weight);
+}
+
+button {
+    border: 1px solid var(--vscode-button-border);
+
+    color: var(--vscode-button-foreground);
+    background-color: var(--vscode-button-background);
+
+    font-family: var(--vscode-editor-font-family);
+    font-size: var(--vscode-editor-font-size);
+    font-weight: var(--vscode-editor-font-weight);
+}
+
+button:focus {
+    outline: 1px solid var(--vscode-focusBorder);
+}
+
+button:hover {
+    background-color: var(--vscode-button-hoverBackground);
+}
+
+button:active {
+    background-color: var(--vscode-button-secondaryBackground);
+}
+
+input {
+    background-color: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    font-family: var(--vscode-editor-font-family);
+    font-size: var(--vscode-editor-font-size);
+    font-weight: var(--vscode-editor-font-weight);
+}
+
+input:focus {
+    outline: 1px solid var(--vscode-focusBorder);
+}
+
+textarea {
+    background-color: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+
+    font-family: var(--vscode-editor-font-family);
+    font-size: var(--vscode-editor-font-size);
+    font-weight: var(--vscode-editor-font-weight);
+
+
+    bottom: 0;
+
+
+    /* 左端を画面の左端に配置 */
+    left: 0;
+
+    /* 横幅を画面いっぱいに */
+    height: 250px;
+    width: 100%;
+    resize: vertical;
+    /* ユーザーによる縦方向のリサイズを許可（不要なら none）*/
+    overflow: auto;
+    /* textareaの内容が溢れた場合にスクロールバーを表示 */
+
+    /* paddingやborderをwidthに含めるようにする */
+    box-sizing: border-box;
+}
+
+textarea:focus {
+    outline: 1px solid var(--vscode-focusBorder);
+}

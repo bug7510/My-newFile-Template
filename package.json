@@ -91,11 +91,18 @@
     "commands": [
       {
         "command": "MyNewFileTemplate.create",
-        "title": "テンプレートから選択"
+        "title": "テンプレートから選択",
+        "category": "MyNewFileTemplate"
       },
       {
         "command": "MyNewFileTemplate.hideTemplateInWorkspace",
-        "title": "ワークスペース内のテンプレート表示設定"
+        "title": "ワークスペース内のテンプレート表示設定",
+        "category": "MyNewFileTemplate"
+      },
+      {
+        "command": "MyNewFileTemplate.openTemplateEditWindowInDebug",
+        "title": "編集ウィンドウを開く",
+        "category": "MyNewFileTemplate"
       }
     ]
   },
