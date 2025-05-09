@@ -4,20 +4,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="{securityPolicy}">
     <link rel="stylesheet" href="{cspSource}.css">
-    <script src="{cspSource}.js"></script>
+    <script type="module" src="{cspSource}.js"></script>
 </head>
 
 <body>
     <h1>Template Settings</h1>
     <label for="templateName">templateName</label><br>
-    <input type="text" id="templateName" value=""><br>
+    <input type="text" id="templateName" value=""><br><br>
     <label for="filename">filename</label><br>
-    <input type="text" id="filename" value=""><br>
+    <input type="text" id="filename" value=""><br><br>
     <label for="template">template</label><br>
-    <textarea id="templateContent"></textarea><br>
-    <button id="decideButton">決定</button>
-    <button id="cancelButton" style="float: right;">キャンセル</button>
+    <textarea id="template"></textarea><br>
+    <button id="decideButton">Save</button>
+    <button id="cancelButton">Cancel</button>
 </body>
 
 </html>

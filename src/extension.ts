@@ -4,7 +4,7 @@ import path from 'path';
 import * as fs from 'fs';
 import * as vscode from 'vscode';
 import { TemplateConfig } from './TemplateConfig'
-import { showTemplateEditWindow } from './SettingWindowResources/SettingWindow'
+import { showTemplateEditWindow } from './SettingWindowCore'
 // テンプレートオブジェクトの型を定義
 
 // This method is called when your extension is activated
@@ -125,7 +125,8 @@ export function activate(context: vscode.ExtensionContext) {
 	let settingWindowDisposable = vscode.commands.registerCommand(
 		'MyNewFileTemplate.openTemplateEditWindowInDebug',
 		async (uri: vscode.Uri) => {
-			showTemplateEditWindow(context)
+			const createdTemplate = await showTemplateEditWindow(context);
+			vscode.window.showInformationMessage(createdTemplate ? createdTemplate.filename : "cancel");
 		});
 	// 拡張機能が非アクティブになる際に登録したコマンドを解放
 	context.subscriptions.push(createFileDisposable);

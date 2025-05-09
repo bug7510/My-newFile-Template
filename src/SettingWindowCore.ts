@@ -1,11 +1,12 @@
-import { TemplateConfig } from '../TemplateConfig'
-import { CommandKey } from '../CommandKey.js'
+import { TemplateConfig } from './TemplateConfig.js'
+import { CommandKey } from './CommandKey.js'
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 
 const FILENAME = "SettingWindow";
 const PLACEHOLDER = "{cspSource}";
+const SECURITYPOLICY = "{securityPolicy}";
 
 /**
  * テンプレート設定用のカスタム入力ウィンドウを表示する非同期メソッド。
@@ -13,7 +14,9 @@ const PLACEHOLDER = "{cspSource}";
  * @param initialConfig - ウィンドウを開いたときに入力フォームに表示される初期値。Webview側で準備ができてから送信される。
  * @returns 決定ボタンが押された場合は入力された値を含むPromise、キャンセルされた場合は undefined を返すPromise。
  */
-export async function showTemplateEditWindow(context: vscode.ExtensionContext, initialConfig: TemplateConfig | undefined = undefined): Promise<TemplateConfig | undefined> {
+export async function showTemplateEditWindow(context: vscode.ExtensionContext, initialConfig:
+    TemplateConfig = { templateName: "", filename: "", template: "" })
+    : Promise<TemplateConfig | undefined> {
 
     const windowResourcesFolderPath = path.join(context.extensionPath, 'src', 'SettingWindowResources');
     const panel = vscode.window.createWebviewPanel(
@@ -26,6 +29,7 @@ export async function showTemplateEditWindow(context: vscode.ExtensionContext, i
             retainContextWhenHidden: true // パネルが非表示になっても状態を保持する (任意だが便利)
         }
     );
+
     let resolvePromise: (value: TemplateConfig | undefined) => void;
     let rejectPromise: (reason?: any) => void;
     const resultPromise = new Promise<TemplateConfig | undefined>((resolve, reject) => {
@@ -39,11 +43,19 @@ export async function showTemplateEditWindow(context: vscode.ExtensionContext, i
     const cssUri = panel.webview.asWebviewUri(vscode.Uri.file(path.join(windowResourcesFolderPath, `${FILENAME}.css`)));
     const jsUri = panel.webview.asWebviewUri(vscode.Uri.file(path.join(windowResourcesFolderPath, `${FILENAME}.js`)));
 
+
+    // CSP (Content Security Policy) - Webviewのセキュリティのため重要
+    const cspSource = panel.webview.cspSource;
+    const securityPolicy = `
+            default-src 'none';
+            script-src ${cspSource};
+            style-src ${cspSource};`;
+
     htmlContent = htmlContent.replace(`${PLACEHOLDER}.css`, cssUri.toString())
-        .replace(`${PLACEHOLDER}.js`, jsUri.toString());
+        .replace(`${PLACEHOLDER}.js`, jsUri.toString())
+        .replace(SECURITYPOLICY, securityPolicy.replace(/\n/g, '').trim());
 
     panel.webview.html = htmlContent;
-
     panel.webview.onDidReceiveMessage(
         message => {
             switch (message.command) {

@@ -46,6 +46,10 @@ button:active {
     background-color: var(--vscode-button-secondaryBackground);
 }
 
+button#cancelButton {
+    float: right;
+}
+
 input {
     background-color: var(--vscode-input-background);
     color: var(--vscode-input-foreground);
