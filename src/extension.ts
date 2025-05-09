@@ -3,14 +3,9 @@
 import path from 'path';
 import * as fs from 'fs';
 import * as vscode from 'vscode';
-import { log } from 'console';
-
+import { TemplateConfig } from './TemplateConfig'
 // テンプレートオブジェクトの型を定義
-interface TemplateConfig {
-	templateName: string;
-	filename: string;
-	template: string;
-}
+
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -125,7 +120,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 
 		}
-	)
+	);
 	// 拡張機能が非アクティブになる際に登録したコマンドを解放
 	context.subscriptions.push(createFileDisposable);
 	context.subscriptions.push(hideTemplateDisposable);
