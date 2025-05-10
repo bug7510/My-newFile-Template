@@ -8,7 +8,6 @@ const cancelButton = document.getElementById('cancelButton'); // キャンセル
 // ★ DOMContentLoaded イベント後に ready メッセージを送信 ★
 window.addEventListener('DOMContentLoaded', () => {
     vscode.postMessage({ command: "ready" });
-    console.log("ready")
 });
 // 拡張機能からのメッセージを
 window.addEventListener('message', event => {

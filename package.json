@@ -17,7 +17,7 @@
       "properties": {
         "MyNewFileTemplate.Templates": {
           "type": "array",
-          "markdownDescription": "ファイル作成時に参照するテンプレートを設定できます。\n\n\n\n\n{filePath[0]}は入力したファイル名。\n{filePath[1]}はファイルが作成されるフォルダ名。\n{filePath[2]}はその上のフォルダ、{filePath[3]}はその上の……\n\n[ワークスペースのテンプレート表示設定](command:MyNewFileTemplate.hideTemplateInWorkspace)",
+          "markdownDescription": "ファイル作成時に参照するテンプレートを設定できます。\n\n\n\n\n{filePath[0]}は入力したファイル名。\n{filePath[1]}はファイルが作成されるフォルダ名。\n{filePath[2]}はその上のフォルダ、{filePath[3]}はその上の……\n\n[ワークスペースのテンプレート表示設定](command:MyNewFileTemplate.hideTemplateInWorkspace)\n\n[テンプレートの編集](command:MyNewFileTemplate.openChoiceForTemplateEdit)",
           "default": [
             {
               "templateName": "空のテキストファイル",
@@ -105,17 +105,17 @@
         "category": "MyNewFileTemplate"
       },
       {
-        "command": "MyNewFileTemplate.template.create",
+        "command": "MyNewFileTemplate.template.create.Global",
         "title": "新規テンプレート作成",
         "category": "MyNewFileTemplate"
       },
       {
-        "command": "MyNewFileTemplate.template.edit",
+        "command": "MyNewFileTemplate.template.edit.Global",
         "title": "既存テンプレート編集",
         "category": "MyNewFileTemplate"
       },
       {
-        "command": "MyNewFileTemplate.template.delete",
+        "command": "MyNewFileTemplate.template.delete.Global",
         "title": "既存テンプレート削除",
         "category": "MyNewFileTemplate"
       }

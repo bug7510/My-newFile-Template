@@ -21,7 +21,7 @@ export async function showTemplateEditWindow(context: vscode.ExtensionContext, i
     const windowResourcesFolderPath = path.join(context.extensionPath, 'src', 'SettingWindowResources');
     const panel = vscode.window.createWebviewPanel(
         'templateEdit', // パネルの識別子 (内部用)
-        'templateSettings', // パネルのタイトル
+        'MyNewFileTemplate', // パネルのタイトル
         vscode.ViewColumn.Beside, // パネルを表示するエディタ列 (例: 現在のアクティブな列)
         {
             // Webviewの設定を有効化
@@ -70,11 +70,19 @@ export async function showTemplateEditWindow(context: vscode.ExtensionContext, i
                     // 'save' コマンドが来た場合、Promiseを解決して値を返す
                     const savedConfig = message.data as TemplateConfig;
                     if (checkTemplateConfigValidValue(savedConfig)) {
-                        resolvePromise(savedConfig);
-                        panel.dispose(); // パネルを閉じる
+                        if (initialConfig.templateName != savedConfig.templateName
+                            || initialConfig.filename != savedConfig.filename
+                            || initialConfig.template != savedConfig.template
+                        ) {
+                            resolvePromise(savedConfig);
+                            panel.dispose(); // パネルを閉じる
+                        }
+                        else {
+                            vscode.window.showErrorMessage("Not changed");
+                        }
                     }
                     else {
-                        vscode.window.showErrorMessage("fill all Textarea")
+                        vscode.window.showErrorMessage("Fill all Textarea");
                     }
                     break;
                 case CommandKey.cancelCommand:

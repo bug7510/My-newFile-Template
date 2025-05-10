@@ -53,11 +53,14 @@ export class quickPickChain<pickItemType extends vscode.QuickPickItem> {
     }
     show() {
         this.quickPick.show();
+        return this;
     }
     hide() {
         this.quickPick.hide();
+        return this;
     }
     dispose() {
         this.quickPick.dispose();
+        return this;
     }
 }
