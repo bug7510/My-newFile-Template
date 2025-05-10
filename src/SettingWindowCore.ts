@@ -68,8 +68,14 @@ export async function showTemplateEditWindow(context: vscode.ExtensionContext, i
                     break;
                 case CommandKey.saveCommand:
                     // 'save' コマンドが来た場合、Promiseを解決して値を返す
-                    resolvePromise(message.data as TemplateConfig);
-                    panel.dispose(); // パネルを閉じる
+                    const savedConfig = message.data as TemplateConfig;
+                    if (checkTemplateConfigValidValue(savedConfig)) {
+                        resolvePromise(savedConfig);
+                        panel.dispose(); // パネルを閉じる
+                    }
+                    else {
+                        vscode.window.showErrorMessage("fill all Textarea")
+                    }
                     break;
                 case CommandKey.cancelCommand:
                     // 'cancel' コマンドが来た場合、Promiseを undefined で解決
@@ -93,4 +99,8 @@ export async function showTemplateEditWindow(context: vscode.ExtensionContext, i
 
     // Promiseを呼び出し元に返し、結果を待ってもらう
     return resultPromise;
+}
+
+function checkTemplateConfigValidValue(config: TemplateConfig) {
+    return config.templateName && config.filename && config.template
 }

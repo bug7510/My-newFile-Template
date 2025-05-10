@@ -82,7 +82,7 @@
     "menus": {
       "explorer/context": [
         {
-          "command": "MyNewFileTemplate.create",
+          "command": "MyNewFileTemplate.newFile",
           "when": "explorerResourceIsFolder||explorerResourceIsRoot",
           "group": "navigation@1"
         }
@@ -90,8 +90,8 @@
     },
     "commands": [
       {
-        "command": "MyNewFileTemplate.create",
-        "title": "テンプレートから選択",
+        "command": "MyNewFileTemplate.newFile",
+        "title": "テンプレートから作成",
         "category": "MyNewFileTemplate"
       },
       {
@@ -100,8 +100,23 @@
         "category": "MyNewFileTemplate"
       },
       {
-        "command": "MyNewFileTemplate.openTemplateEditWindowInDebug",
-        "title": "編集ウィンドウを開く",
+        "command": "MyNewFileTemplate.openChoiceForTemplateEdit",
+        "title": "テンプレート編集",
+        "category": "MyNewFileTemplate"
+      },
+      {
+        "command": "MyNewFileTemplate.template.create",
+        "title": "新規テンプレート作成",
+        "category": "MyNewFileTemplate"
+      },
+      {
+        "command": "MyNewFileTemplate.template.edit",
+        "title": "既存テンプレート編集",
+        "category": "MyNewFileTemplate"
+      },
+      {
+        "command": "MyNewFileTemplate.template.delete",
+        "title": "既存テンプレート削除",
         "category": "MyNewFileTemplate"
       }
     ]

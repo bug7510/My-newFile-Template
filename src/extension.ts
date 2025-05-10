@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import * as vscode from 'vscode';
 import { TemplateConfig } from './TemplateConfig'
 import { showTemplateEditWindow } from './SettingWindowCore'
+import { quickPickChain } from './QuickPickChain';
 // テンプレートオブジェクトの型を定義
 
 // This method is called when your extension is activated
@@ -12,8 +13,8 @@ import { showTemplateEditWindow } from './SettingWindowCore'
 export function activate(context: vscode.ExtensionContext) {
 
 	// package.jsonで定義したコマンドを登録します
-	let createFileDisposable = vscode.commands.registerCommand(
-		'MyNewFileTemplate.create', // package.jsonで定義したコマンドIDと一致させる
+	let newFileDisposable = vscode.commands.registerCommand(
+		'MyNewFileTemplate.newFile', // package.jsonで定義したコマンドIDと一致させる
 		async (uri: vscode.Uri) => { // コマンドが実行されるときに渡される引数。contextメニューからは選択されたリソースのURIが渡されます。
 
 			// 選択されたリソースのパスを取得
@@ -123,13 +124,18 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	);
 	let settingWindowDisposable = vscode.commands.registerCommand(
-		'MyNewFileTemplate.openTemplateEditWindowInDebug',
+		'MyNewFileTemplate.openChoiceForTemplateEdit',
 		async (uri: vscode.Uri) => {
-			const createdTemplate = await showTemplateEditWindow(context);
-			vscode.window.showInformationMessage(createdTemplate ? createdTemplate.filename : "cancel");
+			openEditOptionQuickPick();
 		});
+	let createTemplateDisposable = vscode.commands.registerCommand(
+		'MyNewFileTemplate.template.create',
+		async (uri: vscode.Uri) => {
+
+		}
+	);
 	// 拡張機能が非アクティブになる際に登録したコマンドを解放
-	context.subscriptions.push(createFileDisposable);
+	context.subscriptions.push(newFileDisposable);
 	context.subscriptions.push(hideTemplateDisposable);
 	context.subscriptions.push(settingWindowDisposable);
 }
@@ -193,6 +199,52 @@ async function makeFile(fileName: string, filePath: string, fileContents: string
 		vscode.window.showErrorMessage(`ファイルの作成に失敗しました: ${error.message}`);
 		console.error('ファイル作成エラー:', error);
 	}
+}
+function openEditOptionQuickPick() {
+	enum editChoice {
+		create,
+		edit,
+		delete
+	}
+	interface editOption extends vscode.QuickPickItem {
+		label: string;
+		description: string;
+		choice: editChoice
+	}
+	const editOptionItems: editOption[] = [
+		{
+			label: '新規テンプレートの作成',
+			description: 'MyNewFileTemplate.template.create',
+			choice: editChoice.create,
+		},
+		{
+			label: '既存テンプレートの編集',
+			description: 'MyNewFileTemplate.template.edit',
+			choice: editChoice.edit,
+		},
+		{
+			label: 'テンプレートの削除',
+			description: 'MyNewFileTemplate.template.delete',
+			choice: editChoice.delete,
+		}
+	]
+	const editQuickPickChain = quickPickChain.chain<editOption>()
+		.setItems(editOptionItems)
+		.subscribeOnDidAccept(
+			(selectedChoice: editOption) => {
+				switch (selectedChoice.choice) {
+					case editChoice.create:
+						vscode.commands.executeCommand('MyNewFileTemplate.template.create');
+						break;
+					case editChoice.edit:
+						vscode.commands.executeCommand('MyNewFileTemplate.template.edit');
+						break;
+					case editChoice.delete:
+						vscode.commands.executeCommand('MyNewFileTemplate.template.delete');
+						break;
+				}
+			})
+		.show();
 }
 // This method is called when your extension is deactivated
 export function deactivate() { }
