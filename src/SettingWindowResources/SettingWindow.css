@@ -50,6 +50,13 @@ button#cancelButton {
     float: right;
 }
 
+.editor-container {
+    position: relative;
+    /* サジェストリストを子要素のtextarea/inputに対して絶対配置するために必要 */
+    display: block;
+    /* または block; 必要に応じて */
+}
+
 input {
     background-color: var(--vscode-input-background);
     color: var(--vscode-input-foreground);
@@ -58,9 +65,15 @@ input {
     font-weight: var(--vscode-editor-font-weight);
 }
 
+input#templateName {
+    left: 0;
+    width: 70%;
+}
+
 input:focus {
     outline: 1px solid var(--vscode-focusBorder);
 }
+
 
 textarea {
     background-color: var(--vscode-input-background);
@@ -91,4 +104,38 @@ textarea {
 
 textarea:focus {
     outline: 1px solid var(--vscode-focusBorder);
+}
+
+/* JSで動的に生成される要素 */
+
+.suggestions-list {
+    display: none;
+    /* 最初は非表示 */
+    position: absolute;
+    /* 親コンテナ(.editor-container)に対して絶対配置 */
+    top: 100%;
+    /* 入力要素の直下に配置 */
+    left: 0;
+    width: 100%;
+    /* 入力要素と同じ幅 */
+    border: 1px solid #ccc;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+    /* 他の要素の上に表示 */
+    max-height: 150px;
+    /* 最大高さ */
+    overflow-y: auto;
+    /* 高さ超えたらスクロール */
+    box-sizing: border-box;
+    /* ボーダーとパディングを幅に含める */
+}
+
+.suggestion-item {
+    padding: 8px 10px;
+    cursor: pointer;
+}
+
+.suggestion-item:hover {
+    background-color: #f0f0f0;
 }

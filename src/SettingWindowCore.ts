@@ -78,11 +78,11 @@ export async function showTemplateEditWindow(context: vscode.ExtensionContext, i
                             panel.dispose(); // パネルを閉じる
                         }
                         else {
-                            vscode.window.showErrorMessage("Not changed");
+                            vscode.window.showErrorMessage("This template is not changed at all.");
                         }
                     }
                     else {
-                        vscode.window.showErrorMessage("Fill all Textarea");
+                        vscode.window.showErrorMessage("Fill all Textarea.");
                     }
                     break;
                 case CommandKey.cancelCommand:

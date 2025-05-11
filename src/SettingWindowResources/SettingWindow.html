@@ -11,12 +11,24 @@
 
 <body>
     <h1>Template Settings</h1>
-    <label for="templateName">templateName</label><br>
-    <input type="text" id="templateName" value=""><br><br>
-    <label for="filename">filename</label><br>
-    <input type="text" id="filename" value=""><br><br>
-    <label for="template">template</label><br>
-    <textarea id="template"></textarea><br>
+    <label for="templateName">TemplateName</label>
+    <br>
+    <input type="text" id="templateName" value="">
+    <br>
+    <br>
+    <div class="editor-container">
+        <label for="filename">Filename</label>
+        <br>
+        <input type="text" id="filename" value="" class="js-suggestible-input">
+    </div>
+    <br>
+    <br>
+    <div class="editor-container">
+        <label for="template">Template</label>
+        <br>
+        <textarea id="template" class="js-suggestible-input"></textarea>
+    </div>
+    <br>
     <button id="decideButton">Save</button>
     <button id="cancelButton">Cancel</button>
 </body>

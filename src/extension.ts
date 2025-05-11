@@ -6,7 +6,11 @@ import * as vscode from 'vscode';
 import { TemplateConfig } from './TemplateConfig'
 import { showTemplateEditWindow } from './SettingWindowCore'
 import { quickPickChain } from './QuickPickChain';
-// テンプレートオブジェクトの型を定義
+interface pickTemplate extends vscode.QuickPickItem {
+	label: string;
+	description: string;
+	templateConfig: TemplateConfig
+}
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -34,7 +38,7 @@ export function activate(context: vscode.ExtensionContext) {
 				vscode.window.showErrorMessage('設定にファイルテンプレートが定義されていません。');
 				return;
 			}
-			const selectedItem = await openTemplatesQuickPick(visibleTemplates, 'テンプレートを選択してください');
+			const selectedItem = await openTemplatesQuickPickSelectOne(visibleTemplates, 'テンプレートを選択してください');
 
 			if (!selectedItem) {
 				return;
@@ -64,8 +68,8 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	);
 
-	let hideTemplateDisposable = vscode.commands.registerCommand(
-		'MyNewFileTemplate.hideTemplateInWorkspace',
+	let hideTemplateInWorkSpaceDisposable = vscode.commands.registerCommand(
+		'MyNewFileTemplate.template.workspace.hide',
 		async (uri: vscode.Uri) => {
 			if (!vscode.workspace.workspaceFolders) {
 				vscode.window.showErrorMessage('このコマンドはワークスペース内で実行してください。');
@@ -114,12 +118,12 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	);
 	let settingWindowDisposable = vscode.commands.registerCommand(
-		'MyNewFileTemplate.openChoiceForTemplateEdit',
+		'MyNewFileTemplate.template.global',
 		async (uri: vscode.Uri) => {
 			openEditOptionQuickPick();
 		});
-	let createTemplateDisposable = vscode.commands.registerCommand(
-		'MyNewFileTemplate.template.create.Global',
+	let createTemplateInGlobalDisposable = vscode.commands.registerCommand(
+		'MyNewFileTemplate.template.global.create',
 		async (uri: vscode.Uri) => {
 			let createdConfig: TemplateConfig | undefined;
 			try {
@@ -131,21 +135,24 @@ export function activate(context: vscode.ExtensionContext) {
 					const templates = getTemplatesFromConfig();
 					templates.push(createdConfig);
 					config.update('Templates', templates, vscode.ConfigurationTarget.Global);
+					vscode.window.showInformationMessage(
+						`"${createdConfig.templateName}"を作成しました`
+					);
 				}
 			}
 		}
 	);
 	let editTemplateDisposable = vscode.commands.registerCommand(
-		'MyNewFileTemplate.template.edit.Global',
+		'MyNewFileTemplate.template.global.edit',
 		async (uri: vscode.Uri) => {
 
 			const templates = getTemplatesFromConfig();
-			const selectedItem = await openTemplatesQuickPick(templates, '編集するテンプレートを選択してください');
+			const selectedItem = await openTemplatesQuickPickSelectOne(templates, '編集するテンプレートを選択してください');
 			if (selectedItem) {
 				const editedConfig = await showTemplateEditWindow(context, selectedItem.templateConfig);
 				if (editedConfig) {
 					vscode.window.showInformationMessage(
-						`${selectedItem.templateConfig.templateName}を更新しました`
+						`"${selectedItem.templateConfig.templateName}"を更新しました`
 					);
 					const updatedConfigs = templates.filter(template => template.templateName !== selectedItem.label)
 					updatedConfigs.push(editedConfig);
@@ -157,22 +164,29 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	);
 	let deleteTemplateDisposable = vscode.commands.registerCommand(
-		'MyNewFileTemplate.template.delete.Global',
+		'MyNewFileTemplate.template.global.delete',
 		async (uri: vscode.Uri) => {
 			const templates = getTemplatesFromConfig();
-			const selectedItem = await openTemplatesQuickPick(templates, '削除するテンプレートを選択してください');
-			if (selectedItem) {
+			const selectedItems = await openTemplatesQuickPickSelectMany(templates, '削除するテンプレートを選択してください');
+			if (selectedItems) {
 				const config = getTemplateConfiguration();
-				config.update('Templates', templates.filter(template => template.templateName !== selectedItem.label), vscode.ConfigurationTarget.Global);
+				let updatedConfigs = templates;
+				for (const selectedItem of selectedItems) {
+					updatedConfigs = updatedConfigs.filter(template => template.templateName !== selectedItem.label);
+					vscode.window.showInformationMessage(
+						`"${selectedItem.label}"を削除しました`
+					);
+				}
+				config.update('Templates', updatedConfigs, vscode.ConfigurationTarget.Global);
 			}
 		});
 	// 拡張機能が非アクティブになる際に登録したコマンドを解放
-	context.subscriptions.push(newFileDisposable);
-	context.subscriptions.push(hideTemplateDisposable);
-	context.subscriptions.push(settingWindowDisposable);
-	context.subscriptions.push(createTemplateDisposable);
-	context.subscriptions.push(editTemplateDisposable);
-	context.subscriptions.push(deleteTemplateDisposable);
+	context.subscriptions.push(newFileDisposable,
+		hideTemplateInWorkSpaceDisposable,
+		settingWindowDisposable,
+		createTemplateInGlobalDisposable,
+		editTemplateDisposable,
+		deleteTemplateDisposable);
 }
 
 function getTemplatesFromConfig(): TemplateConfig[] {
@@ -240,16 +254,26 @@ async function makeFile(fileName: string, filePath: string, fileContents: string
 		console.error('ファイル作成エラー:', error);
 	}
 }
-async function openTemplatesQuickPick(templates: TemplateConfig[], placeHolder: string) {
+
+async function openTemplatesQuickPickSelectOne(templates: TemplateConfig[], placeHolder: string) {
+	return await openTemplatesQuickPick(templates, placeHolder) as pickTemplate | undefined;
+}
+async function openTemplatesQuickPickSelectMany(templates: TemplateConfig[], placeHolder: string) {
+	return await openTemplatesQuickPick(templates, placeHolder, true) as pickTemplate[] | undefined;
+}
+async function openTemplatesQuickPick(templates: TemplateConfig[], placeHolder: string, canPickMany: boolean = false)
+	: Promise<pickTemplate | pickTemplate[] | undefined> {
+
 	const pickItems = templates.map(template => ({
 		label: template.templateName,
 		description: template.filename,
 		templateConfig: template
 	}));
 	const selectedItem = await vscode.window.showQuickPick(pickItems, {
+		canPickMany: canPickMany,
 		placeHolder: placeHolder
 	});
-	return selectedItem;
+	return selectedItem as pickTemplate | pickTemplate[] | undefined;
 }
 function openEditOptionQuickPick() {
 	enum editChoice {
@@ -265,17 +289,17 @@ function openEditOptionQuickPick() {
 	const editOptionItems: editOption[] = [
 		{
 			label: '新規テンプレートの作成',
-			description: 'MyNewFileTemplate.template.create.Global',
+			description: 'MyNewFileTemplate.template.global.create',
 			choice: editChoice.create,
 		},
 		{
 			label: '既存テンプレートの編集',
-			description: 'MyNewFileTemplate.template.edit.Global',
+			description: 'MyNewFileTemplate.template.global.edit',
 			choice: editChoice.edit,
 		},
 		{
 			label: 'テンプレートの削除',
-			description: 'MyNewFileTemplate.template.delete.Global',
+			description: 'MyNewFileTemplate.template.global.delete',
 			choice: editChoice.delete,
 		}
 	]
@@ -285,13 +309,13 @@ function openEditOptionQuickPick() {
 			(selectedChoice: editOption) => {
 				switch (selectedChoice.choice) {
 					case editChoice.create:
-						vscode.commands.executeCommand('MyNewFileTemplate.template.create.Global');
+						vscode.commands.executeCommand('MyNewFileTemplate.template.global.create');
 						break;
 					case editChoice.edit:
-						vscode.commands.executeCommand('MyNewFileTemplate.template.edit.Global');
+						vscode.commands.executeCommand('MyNewFileTemplate.template.global.edit');
 						break;
 					case editChoice.delete:
-						vscode.commands.executeCommand('MyNewFileTemplate.template.delete.Global');
+						vscode.commands.executeCommand('MyNewFileTemplate.template.global.delete');
 						break;
 				}
 				editQuickPickChain.dispose();
