@@ -101,6 +101,7 @@ class SuggestionEditor {
         this.handleInput = this.handleInput.bind(this);
         this.handleKeyUp = this.handleKeyUp.bind(this);
         this.handleMouseUp = this.handleMouseUp.bind(this);
+        this.handleSelectionChange = this.handleSelectionChange.bind(this);
         this.handleSuggestionClick = this.handleSuggestionClick.bind(this);
         this.handleBlur = this.handleBlur.bind(this);
 
@@ -115,7 +116,8 @@ class SuggestionEditor {
         this.inputElement.addEventListener('keyup', this.handleKeyUp);
         this.inputElement.addEventListener('mouseup', this.handleMouseUp);
         this.inputElement.addEventListener('blur', this.handleBlur); // フォーカスが外れたとき
-        this.suggestionsDiv.addEventListener('click', this.handleSuggestionClick); // サジェストリスト内のクリック
+        // this.inputElement.addEventListeners('selectionchange', this.handleSelectionChange)
+        this.suggestionsDiv.addEventListener('mousedown', this.handleSuggestionClick); // サジェストリスト内のクリック
     }
 
     /**
@@ -153,36 +155,65 @@ class SuggestionEditor {
 
         this.triggerStrings.forEach(trigger => {
             triggerIsFound |= potentialSearchWordInputting.endsWith(trigger);
-            foundValidTriggers.push(trigger);
+            if (!foundValidTriggers.includes(trigger) && potentialSearchWordInputting.endsWith(trigger))
+                foundValidTriggers.push(trigger);
         });
 
         if (triggerIsFound) {
             this.currentInputWordForSearch = potentialSearchWordInputting; // 追跡中の単語を更新
 
+
             /** @type {{ suggest: string, triggerPos: number }[]} */
             let filteredSuggestions = [];
+            let willDeleteFilePathSuggest = false;
+            foundValidTriggers.forEach((trigger) => {
 
-            foundValidTriggers.forEach(trigger => {
 
-                const filteredSuggestionsWithBeforeCursor = this.suggestionsData.filter(suggestion =>
+                let filteredSuggestionsWithBeforeCursor = this.suggestionsData.filter(suggestion =>
                     suggestion.toLowerCase().includes(trigger.toLowerCase()) // 大文字小文字を区別しない検索
                 );
                 filteredSuggestions.push(...
                     filteredSuggestionsWithBeforeCursor
-                        .filter(suggestion => {
+                        .filter(suggestionWithBeforeCursor => {
+                            //同じサジェストならトリガーが長い方を採る
+                            let sameSuggestIndex = -1;
+                            filteredSuggestions.forEach((suggest, index) => {
+                                if (suggest.suggest === suggestionWithBeforeCursor) {
+                                    sameSuggestIndex = index
+                                };
+                            })
+                            if (sameSuggestIndex !== -1) {
+                                if (trigger.length >= (caretPos - (filteredSuggestions[sameSuggestIndex].triggerPos))) {
+                                    filteredSuggestions.splice(sameSuggestIndex, 1);
+                                    return true;
+                                }
+                                else return false;
+                            }
+                            else return true;
+                        })
+                        .filter(suggestionWithBeforeCursor => {
                             // サジェスト候補のうち、検索語に続く部分を取得
-                            const restOfSuggestion = suggestion.substring(trigger.length);
+                            const restOfSuggestion = suggestionWithBeforeCursor.substring(trigger.length);
                             // カーソル位置の直後にあるテキストを取得
                             const textAfterCaret = text.substring(caretPos);
 
                             // カーソル位置の直後のテキストが、サジェスト候補の残りの部分で始まっているかチェック
                             // 始まっている場合は、そのサジェストは既にテキストに含まれているとみなし、表示しない
-                            return !textAfterCaret.startsWith(restOfSuggestion);
+                            const willAllow = !textAfterCaret.startsWith(restOfSuggestion)
+                            if (!willAllow && suggestionWithBeforeCursor.includes("filePath[")) {
+                                willDeleteFilePathSuggest = true;
+                            }
+                            return willAllow;
                         })
                         .map((suggestion) => {
                             return { suggest: suggestion, triggerPos: (caretPos - trigger.length) }
-                        }));
+                        })
+                );
             });
+            console.log(willDeleteFilePathSuggest);
+            if (willDeleteFilePathSuggest) {
+                filteredSuggestions = filteredSuggestions.filter(suggestion => !suggestion.suggest.includes("filePath["));
+            }
             this.showSuggestions(filteredSuggestions); // サジェストを表示
         } else {
             // トリガー文字列で始まらない場合、サジェストを非表示
@@ -203,7 +234,7 @@ class SuggestionEditor {
             suggestions.forEach(suggestion => {
                 const item = document.createElement('div');
                 item.classList.add('suggestion-item');
-                item.textContent = suggestion.suggest;
+                item.textContent = `${suggestion.suggest}`;
                 item.dataset.suggestion = this.suggestToString(suggestion); // 候補文字列をデータ属性に保持
                 this.suggestionsDiv.appendChild(item);
             });
@@ -294,6 +325,9 @@ class SuggestionEditor {
 
     handleMouseUp() {
         // マウスでカーソル位置を変更した場合
+        this.updateSuggestions();
+    }
+    handleSelectionChange() {
         this.updateSuggestions();
     }
 
