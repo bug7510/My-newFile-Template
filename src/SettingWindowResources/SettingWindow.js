@@ -5,10 +5,27 @@ const templateContentTextarea = document.getElementById('template');
 const decideButton = document.getElementById('decideButton');
 const cancelButton = document.getElementById('cancelButton'); // キャンセルボタン参照
 
-// ★ DOMContentLoaded イベント後に ready メッセージを送信 ★
+//  DOMContentLoaded イベント後に ready メッセージを送信 
 window.addEventListener('DOMContentLoaded', () => {
     vscode.postMessage({ command: "ready" });
-});
+
+    // DOMがロードされたら、指定したクラスを持つすべての要素にサジェスト機能を適用する
+    const suggestibleInputs = document.querySelectorAll('.js-suggestible-input');
+
+    // サンプル用の共通サジェストデータ (入力要素ごとに変えたい場合は、要素のデータ属性などから取得するように拡張)
+
+    const filePathTriggers = ["f", "fi", "fil", "file", "fileP", "filePa", "filePat", "filePath", "filePath[",
+        "{f", "{fi", "{fil", "{file", "{fileP", "{filePa", "{filePat", "{filePath", "{filePath["];
+    const filePathSuggestions = ["{filePath[]}", "{filePath[0]}", "{filePath[1]}", "{filePath[2]}", "{filePath[3]}"];
+
+    suggestibleInputs.forEach(inputElement => {
+        // 各入力要素に対してSuggestionEditorのインスタンスを作成
+        new SuggestionEditor(inputElement, {
+            triggerStrings: filePathTriggers, // トリガー文字は必要に応じて変更可能
+            suggestionsData: filePathSuggestions // この入力要素で使用するサジェストデータ
+        });
+    });
+})
 // 拡張機能からのメッセージを
 window.addEventListener('message', event => {
     const message = event.data; // 拡張機能から送られたデータ
@@ -56,13 +73,13 @@ class SuggestionEditor {
     /**
      * @param {HTMLTextAreaElement | HTMLInputElement} inputElement - サジェスト機能を適用する入力要素
      * @param {object} options - 設定オプション
-     * @param {string[]} options.triggerString - サジェストを表示するトリガー文字列 (例: '@')
+     * @param {string[]} options.triggerStrings - サジェストを表示するトリガー文字列 (例: '@')
      * @param {string[]} options.suggestionsData - サジェスト候補のデータ配列
      */
     constructor(inputElement, options) {
         this.inputElement = inputElement;
         this.options = options;
-        this.triggerString = options.triggerString || ['@'];
+        this.triggerStrings = options.triggerStrings || ['@'];
         this.suggestionsData = options.suggestionsData || [];
 
         // サジェストリスト要素を生成し、入力要素の直後に挿入
@@ -77,7 +94,7 @@ class SuggestionEditor {
         }
 
 
-        this.currentWord = ''; // カーソル位置で追跡している文字列
+        this.currentInputWordForSearch = ''; // カーソル位置で追跡している文字列
         this.triggerStartIndex = -1; // トリガー文字が見つかったインデックス
 
         // イベントリスナーをバインド（thisのコンテキストを保持）
@@ -109,40 +126,67 @@ class SuggestionEditor {
         const caretPos = this.inputElement.selectionStart; // 現在のカーソル位置
 
         // カーソル位置から逆方向にトリガーを探す
-        let currentWordStartIndex = -1;
+        let currentSearchStartIndex = -1;
         for (let i = caretPos - 1; i >= 0; i--) {
             const char = text[i];
             // スペース、改行、特定の記号で単語の区切りとみなす
             if (char === ' ' || char === '\n' || char === '\r' || char === ',' || char === '.' || char === '!' || char === '?') {
-                currentWordStartIndex = i + 1;
+                currentSearchStartIndex = i + 1;
                 break;
             }
             if (i === 0) {
-                currentWordStartIndex = 0;
+                currentSearchStartIndex = 0;
             }
         }
 
-        if (currentWordStartIndex === -1) {
-            currentWordStartIndex = 0;
+        if (currentSearchStartIndex === -1) {
+            currentSearchStartIndex = 0;
         }
 
+        //現在入力中の文字
+        const potentialSearchWordInputting = text.substring(currentSearchStartIndex, caretPos);
 
-        const potentialWord = text.substring(currentWordStartIndex, caretPos);
+        let triggerIsFound = new Boolean(false);
 
-        if (potentialWord.startsWith(this.triggerString)) {
-            // トリガー文字列が見つかった場合
-            this.triggerStartIndex = currentWordStartIndex; // トリガーの開始位置を記録
-            this.currentWord = potentialWord; // 追跡中の単語を更新
 
-            const searchTerm = this.currentWord.substring(this.triggerString.length); // トリガー以降の文字列を検索語とする
-            const filteredSuggestions = this.suggestionsData.filter(suggestion =>
-                suggestion.toLowerCase().includes(searchTerm.toLowerCase()) // 大文字小文字を区別しない検索
-            );
+        let foundValidTriggers = [];
 
+        this.triggerStrings.forEach(trigger => {
+            triggerIsFound |= potentialSearchWordInputting.endsWith(trigger);
+            foundValidTriggers.push(trigger);
+        });
+
+        if (triggerIsFound) {
+            this.currentInputWordForSearch = potentialSearchWordInputting; // 追跡中の単語を更新
+
+            /** @type {{ suggest: string, triggerPos: number }[]} */
+            let filteredSuggestions = [];
+
+            foundValidTriggers.forEach(trigger => {
+
+                const filteredSuggestionsWithBeforeCursor = this.suggestionsData.filter(suggestion =>
+                    suggestion.toLowerCase().includes(trigger.toLowerCase()) // 大文字小文字を区別しない検索
+                );
+                filteredSuggestions.push(...
+                    filteredSuggestionsWithBeforeCursor
+                        .filter(suggestion => {
+                            // サジェスト候補のうち、検索語に続く部分を取得
+                            const restOfSuggestion = suggestion.substring(trigger.length);
+                            // カーソル位置の直後にあるテキストを取得
+                            const textAfterCaret = text.substring(caretPos);
+
+                            // カーソル位置の直後のテキストが、サジェスト候補の残りの部分で始まっているかチェック
+                            // 始まっている場合は、そのサジェストは既にテキストに含まれているとみなし、表示しない
+                            return !textAfterCaret.startsWith(restOfSuggestion);
+                        })
+                        .map((suggestion) => {
+                            return { suggest: suggestion, triggerPos: (caretPos - trigger.length) }
+                        }));
+            });
             this.showSuggestions(filteredSuggestions); // サジェストを表示
         } else {
             // トリガー文字列で始まらない場合、サジェストを非表示
-            this.currentWord = ''; // 追跡中の単語をリセット
+            this.currentInputWordForSearch = ''; // 追跡中の単語をリセット
             this.triggerStartIndex = -1;
             this.hideSuggestions();
         }
@@ -150,24 +194,39 @@ class SuggestionEditor {
 
     /**
      * サジェスト候補を表示する
-     * @param {string[]} suggestions - 表示する候補の配列
+     * @param {{suggest:string,triggerPos:number}[]} suggestions - 表示する候補の配列
      */
     showSuggestions(suggestions) {
         this.suggestionsDiv.innerHTML = ''; // リストをクリア
         if (suggestions.length > 0) {
+            console.log(suggestions.length);
             suggestions.forEach(suggestion => {
                 const item = document.createElement('div');
                 item.classList.add('suggestion-item');
-                item.textContent = suggestion;
-                item.dataset.suggestion = suggestion; // 候補文字列をデータ属性に保持
+                item.textContent = suggestion.suggest;
+                item.dataset.suggestion = this.suggestToString(suggestion); // 候補文字列をデータ属性に保持
                 this.suggestionsDiv.appendChild(item);
             });
             this.suggestionsDiv.style.display = 'block'; // リストを表示
-        } else {
+        }
+        else {
             this.hideSuggestions(); // 候補がなければ非表示
         }
     }
-
+    /** @param {suggest:string,triggerPos:number} suggest */
+    suggestToString(suggest) {
+        return `suggest:${suggest.suggest},triggerPos:${suggest.triggerPos}}`;
+    }
+    /** 
+     * @param {string} str 
+     * @returns {suggest:string,triggerPos:number}
+    */
+    stringToSuggest(str) {
+        const parts = str.split(',');
+        const suggest = parts[0].split(':')[1];
+        const triggerPos = parseInt(parts[1].split(':')[1]);
+        return { suggest, triggerPos };
+    }
     /**
      * サジェスト候補を非表示にする
      */
@@ -184,51 +243,39 @@ class SuggestionEditor {
         const target = event.target;
         if (target.classList.contains('suggestion-item')) {
             const suggestionText = target.dataset.suggestion;
-            this.insertSuggestion(suggestionText); // 選択した候補を挿入
+            this.insertSuggestion(this.stringToSuggest(suggestionText)); // 選択した候補を挿入
             this.hideSuggestions(); // サジェストリストを非表示にする
         }
     }
 
+    //todo
     /**
      * テキストエリアにサジェスト文字列を挿入する
-     * @param {string} suggestion - 挿入する文字列
+     * @param {{suggest:string,triggerPos:number}} suggestion - 挿入する文字列
      */
     insertSuggestion(suggestion) {
         const text = this.inputElement.value;
         const caretPos = this.inputElement.selectionStart; // 現在のカーソル位置
+        console.log(suggestion.suggest);
+        console.log(suggestion.triggerPos);
 
-        if (this.triggerStartIndex !== -1) {
-            // トリガーが見つかっている場合、トリガーからカーソル位置までの部分を置換
-            const beforeText = text.substring(0, this.triggerStartIndex);
-            const afterText = text.substring(caretPos);
+        // トリガーが見つかっている場合、トリガーからカーソル位置までの部分を置換
+        const beforeText = text.substring(0, suggestion.triggerPos);
+        const afterText = text.substring(caretPos);
 
-            const newText = beforeText + suggestion + afterText;
+        const newText = beforeText + suggestion.suggest + afterText;
 
-            this.inputElement.value = newText;
+        this.inputElement.value = newText;
 
-            // 新しいカーソル位置を設定（挿入した文字列の直後）
-            const newCaretPos = this.triggerStartIndex + suggestion.length;
-            this.inputElement.selectionStart = newCaretPos;
-            this.inputElement.selectionEnd = newCaretPos;
+        // 新しいカーソル位置を設定（挿入した文字列の直後）
+        const newCaretPos = this.triggerStartIndex + suggestion.length;
+        this.inputElement.selectionStart = newCaretPos;
+        this.inputElement.selectionEnd = newCaretPos;
 
-            // 値が変更されたことを示すために 'input' イベントを手動で発火させる
-            // これにより、後続の updateSuggestions が適切に動作する
-            this.inputElement.dispatchEvent(new Event('input', { bubbles: true })); // bubbles: true を推奨
+        // 値が変更されたことを示すために 'input' イベントを手動で発火させる
+        // これにより、後続の updateSuggestions が適切に動作する
+        this.inputElement.dispatchEvent(new Event('input', { bubbles: true })); // bubbles: true を推奨
 
-        } else {
-            // 基本的にはここには来ない想定だが、念のため
-            // カーソル位置にそのまま挿入
-            const beforeText = text.substring(0, caretPos);
-            const afterText = text.substring(caretPos);
-            const newText = beforeText + suggestion + afterText;
-            this.inputElement.value = newText;
-
-            const newCaretPos = caretPos + suggestion.length;
-            this.inputElement.selectionStart = newCaretPos;
-            this.inputElement.selectionEnd = newCaretPos;
-
-            this.inputElement.dispatchEvent(new Event('input', { bubbles: true }));
-        }
 
         this.inputElement.focus(); // 挿入後にテキストエリアにフォーカスを戻す
     }
