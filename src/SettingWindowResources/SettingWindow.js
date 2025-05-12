@@ -14,7 +14,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // サンプル用の共通サジェストデータ (入力要素ごとに変えたい場合は、要素のデータ属性などから取得するように拡張)
 
-    const filePathTriggers = ["f", "fi", "fil", "file", "fileP", "filePa", "filePat", "filePath", "filePath[",
+    const filePathTriggers = ["fi", "fil", "file", "fileP", "filePa", "filePat", "filePath", "filePath[",
         "{f", "{fi", "{fil", "{file", "{fileP", "{filePa", "{filePat", "{filePath", "{filePath["];
     const filePathSuggestions = ["{filePath[]}", "{filePath[0]}", "{filePath[1]}", "{filePath[2]}", "{filePath[3]}"];
 
@@ -95,7 +95,6 @@ class SuggestionEditor {
 
 
         this.currentInputWordForSearch = ''; // カーソル位置で追跡している文字列
-        this.triggerStartIndex = -1; // トリガー文字が見つかったインデックス
 
         // イベントリスナーをバインド（thisのコンテキストを保持）
         this.handleInput = this.handleInput.bind(this);
@@ -218,7 +217,6 @@ class SuggestionEditor {
         } else {
             // トリガー文字列で始まらない場合、サジェストを非表示
             this.currentInputWordForSearch = ''; // 追跡中の単語をリセット
-            this.triggerStartIndex = -1;
             this.hideSuggestions();
         }
     }
@@ -232,9 +230,25 @@ class SuggestionEditor {
         if (suggestions.length > 0) {
             console.log(suggestions.length);
             suggestions.forEach(suggestion => {
+                let suggestText;
+                switch (suggestion.suggest) {
+                    case "{filePath[0]}":
+                        suggestText = `${suggestion.suggest} : 入力されたファイル名`;
+                        break;
+                    case "{filePath[1]}":
+                        suggestText = `${suggestion.suggest} : フォルダ名`;
+                        break;
+                    case "{filePath[2]}":
+                        suggestText = `${suggestion.suggest} : 一つ上のフォルダ名`;
+                        break;
+                    default:
+                        suggestText = suggestion.suggest;
+                        break;
+
+                }
                 const item = document.createElement('div');
                 item.classList.add('suggestion-item');
-                item.textContent = `${suggestion.suggest}`;
+                item.textContent = suggestText;
                 item.dataset.suggestion = this.suggestToString(suggestion); // 候補文字列をデータ属性に保持
                 this.suggestionsDiv.appendChild(item);
             });
@@ -271,6 +285,7 @@ class SuggestionEditor {
      * @param {MouseEvent} event
      */
     handleSuggestionClick(event) {
+        event.preventDefault(); // デフォルトの動作をキャンセル
         const target = event.target;
         if (target.classList.contains('suggestion-item')) {
             const suggestionText = target.dataset.suggestion;
@@ -287,8 +302,6 @@ class SuggestionEditor {
     insertSuggestion(suggestion) {
         const text = this.inputElement.value;
         const caretPos = this.inputElement.selectionStart; // 現在のカーソル位置
-        console.log(suggestion.suggest);
-        console.log(suggestion.triggerPos);
 
         // トリガーが見つかっている場合、トリガーからカーソル位置までの部分を置換
         const beforeText = text.substring(0, suggestion.triggerPos);
@@ -298,17 +311,16 @@ class SuggestionEditor {
 
         this.inputElement.value = newText;
 
-        // 新しいカーソル位置を設定（挿入した文字列の直後）
-        const newCaretPos = this.triggerStartIndex + suggestion.length;
-        this.inputElement.selectionStart = newCaretPos;
-        this.inputElement.selectionEnd = newCaretPos;
-
         // 値が変更されたことを示すために 'input' イベントを手動で発火させる
         // これにより、後続の updateSuggestions が適切に動作する
         this.inputElement.dispatchEvent(new Event('input', { bubbles: true })); // bubbles: true を推奨
 
 
         this.inputElement.focus(); // 挿入後にテキストエリアにフォーカスを戻す
+        // 新しいカーソル位置を設定（挿入した文字列の直後）
+        let newCaretPos = suggestion.triggerPos + suggestion.suggest.length;
+        if (suggestion.suggest === "{filePath[]}") newCaretPos -= "]}".length;
+        this.inputElement.setSelectionRange(newCaretPos, newCaretPos);
     }
 
 

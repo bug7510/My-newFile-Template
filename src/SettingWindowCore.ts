@@ -15,7 +15,11 @@ const SECURITYPOLICY = "{securityPolicy}";
  * @returns 決定ボタンが押された場合は入力された値を含むPromise、キャンセルされた場合は undefined を返すPromise。
  */
 export async function showTemplateEditWindow(context: vscode.ExtensionContext, initialConfig:
-    TemplateConfig = { templateName: "", filename: "", template: "" })
+    TemplateConfig = {
+        templateName: "新しいテンプレート",
+        filename: "{filePath[0]}.txt",
+        template: ""
+    })
     : Promise<TemplateConfig | undefined> {
 
     const windowResourcesFolderPath = path.join(context.extensionPath, 'src', 'SettingWindowResources');
