@@ -101,6 +101,7 @@ class SuggestionEditor {
         this.handleKeyUp = this.handleKeyUp.bind(this);
         this.handleMouseUp = this.handleMouseUp.bind(this);
         this.handleSelectionChange = this.handleSelectionChange.bind(this);
+        this.handleResizeOrScroll = this.updateListPositionAndHeight.bind(this); // windowイベント用のバインド済みメソッド
         this.handleSuggestionClick = this.handleSuggestionClick.bind(this);
         this.handleBlur = this.handleBlur.bind(this);
 
@@ -115,8 +116,29 @@ class SuggestionEditor {
         this.inputElement.addEventListener('keyup', this.handleKeyUp);
         this.inputElement.addEventListener('mouseup', this.handleMouseUp);
         this.inputElement.addEventListener('blur', this.handleBlur); // フォーカスが外れたとき
-        // this.inputElement.addEventListeners('selectionchange', this.handleSelectionChange)
         this.suggestionsDiv.addEventListener('mousedown', this.handleSuggestionClick); // サジェストリスト内のクリック
+        window.addEventListener('resize', this.handleResizeOrScroll);
+        window.addEventListener('scroll', this.handleResizeOrScroll, true); // true はキャプチャフェーズで実行する場合。通常は不要かも。
+
+        this.resizeObserver = new MutationObserver(mutations => {
+            mutations.forEach(mutation => {
+                // style 属性が変更されたか、またはサイズに影響する可能性のある属性が変更されたかチェック
+                // 例えば、width/height 属性なども監視対象に加えるか検討
+                if (mutation.type === 'attributes' && (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
+                    // リサイズによってスタイルが変わった可能性があるので、リストを更新
+                    // ただし、リストが表示中の場合のみ実行するのが効率的です。
+                    if (this.suggestionsDiv.style.display === 'block') {
+                        this.updateListPositionAndHeight();
+                    }
+                }
+            })
+        });
+        this.resizeObserver.observe(this.inputElement, {
+            attributes: true, // 属性の変更を監視
+            attributeFilter: ['style', 'class'] // style属性やclass属性の変更を特に監視
+            // または attributeFilter を省略して attributes: true のみでも良いが、より多くの変更で発火する
+        });
+
     }
 
     /**
@@ -213,7 +235,13 @@ class SuggestionEditor {
             if (willDeleteFilePathSuggest) {
                 filteredSuggestions = filteredSuggestions.filter(suggestion => !suggestion.suggest.includes("filePath["));
             }
-            this.showSuggestions(filteredSuggestions); // サジェストを表示
+            if (filteredSuggestions.length !== 0) {
+                this.showSuggestions(filteredSuggestions); // サジェストを表示
+                this.updateListPositionAndHeight(); // 位置と高さを調整
+                this.suggestionsDiv.style.display = 'block'; // リストを表示
+            }
+            else this.hideSuggestions(); // サジェストを表示しない
+
         } else {
             // トリガー文字列で始まらない場合、サジェストを非表示
             this.currentInputWordForSearch = ''; // 追跡中の単語をリセット
@@ -227,50 +255,85 @@ class SuggestionEditor {
      */
     showSuggestions(suggestions) {
         this.suggestionsDiv.innerHTML = ''; // リストをクリア
-        if (suggestions.length > 0) {
-            console.log(suggestions.length);
-            suggestions.forEach(suggestion => {
-                let suggestText;
-                switch (suggestion.suggest) {
-                    case "{filePath[0]}":
-                        suggestText = `${suggestion.suggest} : 入力されたファイル名`;
-                        break;
-                    case "{filePath[1]}":
-                        suggestText = `${suggestion.suggest} : フォルダ名`;
-                        break;
-                    case "{filePath[2]}":
-                        suggestText = `${suggestion.suggest} : 一つ上のフォルダ名`;
-                        break;
-                    default:
-                        suggestText = suggestion.suggest;
-                        break;
+        suggestions.forEach(suggestion => {
+            let suggestText = suggestion.suggest;
+            //サジェストがfilePath関係だったときの説明を加算
+            switch (suggestion.suggest) {
+                case "{filePath[0]}":
+                    suggestText += ` : 入力されたファイル名`;
+                    break;
+                case "{filePath[1]}":
+                    suggestText += ` : フォルダ名`;
+                    break;
+                case "{filePath[2]}":
+                    suggestText += ` : 一つ上のフォルダ名`;
+                    break;
+            }
+            const item = document.createElement('div');
+            item.classList.add('suggestion-item');
+            item.textContent = suggestText;
+            item.dataset.suggestion = this.suggestToString(suggestion); // 候補文字列をデータ属性に保持
+            this.suggestionsDiv.appendChild(item);
+        });
 
-                }
-                const item = document.createElement('div');
-                item.classList.add('suggestion-item');
-                item.textContent = suggestText;
-                item.dataset.suggestion = this.suggestToString(suggestion); // 候補文字列をデータ属性に保持
-                this.suggestionsDiv.appendChild(item);
-            });
-            this.suggestionsDiv.style.display = 'block'; // リストを表示
-        }
-        else {
-            this.hideSuggestions(); // 候補がなければ非表示
-        }
     }
-    /** @param {suggest:string,triggerPos:number} suggest */
+    /** 
+     * @param {{suggest:string,triggerPos:number}} suggest 
+     * @returns 
+    */
     suggestToString(suggest) {
         return `suggest:${suggest.suggest},triggerPos:${suggest.triggerPos}}`;
     }
     /** 
      * @param {string} str 
-     * @returns {suggest:string,triggerPos:number}
+     * @returns {{suggest:string,triggerPos:number}}
     */
     stringToSuggest(str) {
         const parts = str.split(',');
         const suggest = parts[0].split(':')[1];
         const triggerPos = parseInt(parts[1].split(':')[1]);
         return { suggest, triggerPos };
+    }
+    /**
+     * サジェストリストの位置（必要に応じて）と最大高さを更新する
+     * ウィンドウのリサイズやスクロール時にも呼ばれる
+     */
+    updateListPositionAndHeight() {
+        // リストが非表示の場合は何もしない
+        if (this.suggestionsDiv.style.display === 'none') {
+            return;
+        }
+        const maxHeight = 100;//リストの最大高さ
+        const inputRect = this.inputElement.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const bottomMargin = 10; // ページ下端からの余白 (px)
+
+        // 入力要素の下端からウィンドウの下端までの距離
+        const spaceBelow = viewportHeight - inputRect.bottom - bottomMargin;
+
+        // 入力要素の上端からウィンドウの上端までの距離
+
+        // デフォルトでは下に表示する
+        this.suggestionsDiv.style.top = '100%'; // 親要素 (.editor-container) の下端に
+        this.suggestionsDiv.style.bottom = 'auto';
+
+        const topMargin = 10; // ページ上端からの余白 (px)
+        const spaceAbove = inputRect.top - topMargin;
+        const listHeight = this.suggestionsDiv.offsetHeight; // 現在のリストの高さ（表示されていれば）
+        if (spaceBelow < listHeight && spaceAbove > spaceBelow) {
+            // 下に収まらず、かつ上にスペースがある程度ある場合、上に表示
+            this.suggestionsDiv.style.top = 'auto';
+            this.suggestionsDiv.style.bottom = '100%'; // 入力要素の上に
+            this.suggestionsDiv.style.maxHeight = `${Math.max(50, Math.min(spaceAbove, maxHeight))}px`; // 上方向の利用可能なスペースを max-height に
+        } else {
+            // それ以外の場合は下に表示 (デフォルト)
+            this.suggestionsDiv.style.top = '100%';
+            this.suggestionsDiv.style.bottom = 'auto';
+            this.suggestionsDiv.style.maxHeight = `${Math.max(50, Math.min(spaceBelow, maxHeight))}px`;
+        }
+
+        // リストの幅を入力要素に合わせる（CSSで width: 100% にしていれば親要素依存になるので不要な場合も）
+        // this.suggestionsDiv.style.width = `${inputRect.width}px`;
     }
     /**
      * サジェスト候補を非表示にする
@@ -356,15 +419,23 @@ class SuggestionEditor {
     }
 
     // 必要に応じて、removeEventListeners() メソッドも追加して、要素がDOMから削除される際にリスナーを解除できるようにする
-    // removeEventListeners() {
-    //     this.inputElement.removeEventListener('input', this.handleInput);
-    //     this.inputElement.removeEventListener('keyup', this.handleKeyUp);
-    //     this.inputElement.removeEventListener('mouseup', this.handleMouseUp);
-    //     this.inputElement.removeEventListener('blur', this.handleBlur);
-    //     this.suggestionsDiv.removeEventListener('click', this.handleSuggestionClick);
-    //     // this.suggestionsDiv もDOMから削除する必要があるかもしれません
-    //     if (this.suggestionsDiv.parentElement) {
-    //          this.suggestionsDiv.parentElement.removeChild(this.suggestionsDiv);
-    //     }
-    // }
+    removeEventListeners() {
+        this.inputElement.removeEventListener('input', this.handleInput);
+        this.inputElement.removeEventListener('keyup', this.handleKeyUp);
+        this.inputElement.removeEventListener('mouseup', this.handleMouseUp);
+        this.inputElement.removeEventListener('blur', this.handleBlur);
+        this.suggestionsDiv.removeEventListener('mousedown', this.handleSuggestionClick);
+        if (this.resizeObserver) {
+            this.resizeObserver.disconnect(); // オブザーバーを停止
+        }
+        // window に登録したリスナーを削除
+        window.removeEventListener('resize', this.handleResizeOrScroll);
+        window.removeEventListener('scroll', this.handleResizeOrScroll, true);
+
+        // this.suggestionsDiv もDOMから削除する必要があるかもしれません
+        if (this.suggestionsDiv.parentElement) {
+            this.suggestionsDiv.parentElement.removeChild(this.suggestionsDiv);
+        }
+
+    }
 }

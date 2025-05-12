@@ -123,8 +123,6 @@ textarea:focus {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     z-index: 10;
     /* 他の要素の上に表示 */
-    max-height: 150px;
-    /* 最大高さ */
     overflow-y: auto;
     /* 高さ超えたらスクロール */
     box-sizing: border-box;
