@@ -134,6 +134,7 @@ textarea:focus {
     cursor: pointer;
 }
 
-.suggestion-item:hover {
+.suggestion-item:hover,
+.suggestion-item.selected {
     background-color: #f0f0f0;
 }

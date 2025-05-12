@@ -87,25 +87,30 @@ class SuggestionEditor {
         this.suggestionsDiv.classList.add('suggestions-list');
         // 入力要素の親要素を見つけて、その子として追加する（containerを使っている前提）
         if (this.inputElement.parentElement) {
-            this.inputElement.parentElement.appendChild(this.suggestionsDiv);
+            this.inputElement.parentElement.insertBefore(this.suggestionsDiv, this.inputElement.nextSibling);
         } else {
             // 親要素がない場合は、入力要素の直後に挿入
             this.inputElement.parentNode.insertBefore(this.suggestionsDiv, this.inputElement.nextSibling);
         }
 
+        //  選択されているサジェスト項目のインデックス (-1 は何も選択されていない状態)
+        this.ResetSelectedIndex();
 
         this.currentInputWordForSearch = ''; // カーソル位置で追跡している文字列
 
         // イベントリスナーをバインド（thisのコンテキストを保持）
         this.handleInput = this.handleInput.bind(this);
-        this.handleKeyUp = this.handleKeyUp.bind(this);
+        this.handleKeyDown = this.handleKeyDown.bind(this);
         this.handleMouseUp = this.handleMouseUp.bind(this);
-        this.handleSelectionChange = this.handleSelectionChange.bind(this);
+        this.handleBlur = this.handleBlur.bind(this);
+        // this.handleSelectionChange = this.handleSelectionChange.bind(this);
         this.handleResizeOrScroll = this.updateListPositionAndHeight.bind(this); // windowイベント用のバインド済みメソッド
         this.handleSuggestionClick = this.handleSuggestionClick.bind(this);
-        this.handleBlur = this.handleBlur.bind(this);
 
         this.addEventListeners();
+    }
+    ResetSelectedIndex() {
+        this.selectedIndex = -1;
     }
 
     /**
@@ -113,11 +118,12 @@ class SuggestionEditor {
      */
     addEventListeners() {
         this.inputElement.addEventListener('input', this.handleInput);
-        this.inputElement.addEventListener('keyup', this.handleKeyUp);
+        this.inputElement.addEventListener('keydown', this.handleKeyDown);
         this.inputElement.addEventListener('mouseup', this.handleMouseUp);
         this.inputElement.addEventListener('blur', this.handleBlur); // フォーカスが外れたとき
         this.suggestionsDiv.addEventListener('mousedown', this.handleSuggestionClick); // サジェストリスト内のクリック
         window.addEventListener('resize', this.handleResizeOrScroll);
+        // document.addEventListener('selectionchange', this.handleSelectionChange); // Listen on document for selection changes
         window.addEventListener('scroll', this.handleResizeOrScroll, true); // true はキャプチャフェーズで実行する場合。通常は不要かも。
 
         this.resizeObserver = new MutationObserver(mutations => {
@@ -231,12 +237,12 @@ class SuggestionEditor {
                         })
                 );
             });
-            console.log(willDeleteFilePathSuggest);
             if (willDeleteFilePathSuggest) {
                 filteredSuggestions = filteredSuggestions.filter(suggestion => !suggestion.suggest.includes("filePath["));
             }
             if (filteredSuggestions.length !== 0) {
                 this.showSuggestions(filteredSuggestions); // サジェストを表示
+                this.updateHighlight(0); // ハイライトを解除
                 this.updateListPositionAndHeight(); // 位置と高さを調整
                 this.suggestionsDiv.style.display = 'block'; // リストを表示
             }
@@ -341,8 +347,141 @@ class SuggestionEditor {
     hideSuggestions() {
         this.suggestionsDiv.style.display = 'none';
         this.suggestionsDiv.innerHTML = ''; // リストをクリア
+        this.ResetSelectedIndex();
     }
+    /**
+     * @param {number} newIndex -サジェスト数を考慮しない(循環するよう加工する前の)サジェスト移動先
+     */
+    updateHighlight(newIndex) {
+        const items = this.suggestionsDiv.querySelectorAll('.suggestion-item');
+        const itemCount = items.length;
+        console.log(`itemCount: ${itemCount}`);
 
+        if (itemCount === 0) {
+            this.ResetSelectedIndex();
+            return;
+        }
+
+        // 現在選択されている項目からクラスを削除
+        if (this.selectedIndex !== -1 && items[this.selectedIndex]) {
+            items[this.selectedIndex].classList.remove('selected');
+        }
+
+        // 新しいインデックスが有効範囲内かチェック
+        let safeIndex = newIndex;
+        if (safeIndex < 0) {
+            safeIndex = itemCount - 1; // 上方向への循環
+        } else if (safeIndex >= itemCount) {
+            safeIndex = 0; // 下方向への循環
+        }
+
+        // 新しい項目にクラスを追加し、選択インデックスを更新
+        if (items[safeIndex]) {
+            items[safeIndex].classList.add('selected');
+            this.selectedIndex = safeIndex;
+            console.log(`selectedIndex: ${safeIndex}`);
+
+            // 選択された項目がスクロールビューに収まるようにする
+            items[safeIndex].scrollIntoView({
+                block: 'nearest', // 上下方向で最も近い端に表示
+                inline: 'nearest', // 左右方向で最も近い端に表示 (横スクロールがある場合)
+                behavior: 'smooth' // スムーズにスクロール (好みで 'auto' も可)
+            });
+        } else {
+            // 何らかの理由でインデックスが無効な場合
+            this.ResetSelectedIndex();
+        }
+    }
+    //toCheck
+    /**  
+     *  キーボードイベントを処理する
+     * @param {KeyboardEvent} event 
+     */
+    handleKeyDown(event) {
+        // サジェストリストが表示されていない場合は何もしない
+        if (this.suggestionsDiv.style.display === 'none') {
+            return;
+        }
+
+        const items = this.suggestionsDiv.querySelectorAll('.suggestion-item');
+        const itemCount = items.length;
+
+        // 候補がない場合、Enter/Tab/Escでリストを閉じ、デフォルト動作を防ぐ
+        if (itemCount === 0) {
+            return; // 他のキーは無視（デフォルト動作させる）
+        }
+
+        let handled = false; // このイベントがハンドリングされたかを示すフラグ
+
+        switch (event.key) {
+            case 'ArrowDown':
+                event.preventDefault(); // デフォルトのカーソル移動を防ぐ
+                if (this.selectedIndex != -1) {
+                    let nextIndexDown = this.selectedIndex + 1;
+                    // 最初のEnter/Downでの選択（-1から0へ）や、循環を updateHighlight に任せる
+                    this.updateHighlight(nextIndexDown);
+                } else {
+                    this.updateHighlight(0);
+                }
+                handled = true;
+                break;
+            case 'ArrowUp':
+                event.preventDefault(); // デフォルトのカーソル移動を防ぐ
+                if (this.selectedIndex != -1) {
+                    let nextIndexUp = this.selectedIndex - 1;
+                    // 最初のUpでの選択（-1から itemCount-1 へ）や、循環を updateHighlight に任せる
+                    this.updateHighlight(nextIndexUp);
+                }
+                else {
+                    this.updateHighlight(0);
+                }
+                handled = true;
+                break;
+            case 'Enter':
+            case 'Tab':
+                // EnterまたはTabは、項目が選択されている場合のみ挿入
+                if (this.selectedIndex !== -1) {
+                    //toCheck
+                    event.preventDefault(); // デフォルト動作（改行、タブ、フォーカス移動）を防ぐ
+                    const selectedItem = items[this.selectedIndex];
+                    const suggestionText = selectedItem.dataset.suggestion;
+                    this.insertSuggestion(this.stringToSuggest(suggestionText)); // 選択項目を挿入
+                    // hideSuggestions は insertSuggestion の中で input イベント発火により呼ばれる想定ですが、
+                    // 念のため明示的に呼んでも良いです。二重呼び出しにならないように注意。
+                    // this.hideSuggestions(); // リストを閉じる
+                    // 注: insertSuggestion の中でdispatchEvent('input') しており、
+                    // それが updateSuggestions を呼び出し、候補がなくなるため hideSuggestions が呼ばれます。
+                    // ここで再度 hideSuggestions を呼ぶとタイミングによっては問題になる可能性があります。
+                    // insertSuggestion の後続処理に任せるのが良いでしょう。
+                    handled = true; // イベント処理済み
+                } else {
+                    // 項目が選択されていない状態で Enter/Tab が押された場合、リストを閉じる
+                    event.preventDefault(); // デフォルト動作を防ぐ
+                    const selectedItem = items[0];
+                    const suggestionText = selectedItem.dataset.suggestion;
+                    this.insertSuggestion(this.stringToSuggest(suggestionText));
+                    handled = true; // イベント処理済み
+                }
+                break;
+            case 'Escape': // Escキーでリストを閉じる
+                if (this.suggestionsDiv.style.display === 'block') {
+                    event.preventDefault();
+                    this.hideSuggestions();
+                    handled = true; // イベント処理済み
+                }
+                break;
+            default:
+                this.updateSuggestions();
+                break;
+            // 他のキーは処理しない（デフォルト動作させる）
+        }
+
+        // イベントがハンドリングされた場合は、他のリスナーへの伝播を停止しても良いですが、
+        // 通常は preventDefault() だけで十分です。
+        // if (handled) {
+        //     event.stopPropagation();
+        // }
+    }
     /**
      * サジェスト候補を選択（クリック）したときの処理
      * @param {MouseEvent} event
@@ -369,8 +508,13 @@ class SuggestionEditor {
         // トリガーが見つかっている場合、トリガーからカーソル位置までの部分を置換
         const beforeText = text.substring(0, suggestion.triggerPos);
         const afterText = text.substring(caretPos);
-
-        const newText = beforeText + suggestion.suggest + afterText;
+        let newText;
+        if (suggestion.suggest !== "{filePath[]}") {
+            newText = beforeText + suggestion.suggest + afterText;
+        }
+        else {
+            newText = beforeText + "{filePath[number]}" + afterText;
+        }
 
         this.inputElement.value = newText;
 
@@ -380,10 +524,18 @@ class SuggestionEditor {
 
 
         this.inputElement.focus(); // 挿入後にテキストエリアにフォーカスを戻す
+
         // 新しいカーソル位置を設定（挿入した文字列の直後）
-        let newCaretPos = suggestion.triggerPos + suggestion.suggest.length;
-        if (suggestion.suggest === "{filePath[]}") newCaretPos -= "]}".length;
-        this.inputElement.setSelectionRange(newCaretPos, newCaretPos);
+        if (suggestion.suggest !== "{filePath[]}") {
+            const newCaretPos = suggestion.triggerPos + suggestion.suggest.length;
+            this.inputElement.setSelectionRange(newCaretPos, newCaretPos);
+        }
+        else {
+            const beginCaretPos = suggestion.triggerPos + suggestion.suggest.length + "number".length - "number]}".length;
+            const endCaretPos = suggestion.triggerPos + suggestion.suggest.length + "number".length - "]}".length;
+            this.inputElement.setSelectionRange(beginCaretPos, endCaretPos);
+            this.hideSuggestions(); // サジェストリストを非表示にする
+        }
     }
 
 
@@ -393,18 +545,19 @@ class SuggestionEditor {
         this.updateSuggestions();
     }
 
-    handleKeyUp(event) {
-        // カーソル移動に関係するキーでも updateSuggestions を呼び出す
-        this.updateSuggestions();
-    }
-
     handleMouseUp() {
         // マウスでカーソル位置を変更した場合
         this.updateSuggestions();
     }
-    handleSelectionChange() {
-        this.updateSuggestions();
-    }
+    // handleSelectionChange() {
+    //     // Check if the active element is the input element this instance is managing
+    //     // This is important if 'selectionchange' is listened to on document/window
+    //     if (document.activeElement === this.inputElement) {
+    //         this.updateSuggestions();
+    //     } else {
+    //         this.hideSuggestions(); // Hide if selection change is outside this input
+    //     }
+    // }
 
     handleBlur() {
         // テキストエリアからフォーカスが外れたときにサジェストを非表示
@@ -421,10 +574,11 @@ class SuggestionEditor {
     // 必要に応じて、removeEventListeners() メソッドも追加して、要素がDOMから削除される際にリスナーを解除できるようにする
     removeEventListeners() {
         this.inputElement.removeEventListener('input', this.handleInput);
-        this.inputElement.removeEventListener('keyup', this.handleKeyUp);
+        this.inputElement.removeEventListener('keydown', this.handleKeyDown);
         this.inputElement.removeEventListener('mouseup', this.handleMouseUp);
-        this.inputElement.removeEventListener('blur', this.handleBlur);
         this.suggestionsDiv.removeEventListener('mousedown', this.handleSuggestionClick);
+        // document.removeEventListener('selectionchange', this.handleSelectionChange); // Remove from document
+        this.inputElement.removeEventListener('blur', this.handleBlur);
         if (this.resizeObserver) {
             this.resizeObserver.disconnect(); // オブザーバーを停止
         }
