@@ -500,40 +500,50 @@ class SuggestionEditor {
     /**
      * テキストエリアにサジェスト文字列を挿入する
      * @param {{suggest:string,triggerPos:number}} suggestion - 挿入する文字列
+     * TODO: document.execCommand の使用は、一部非推奨となっている点に留意。
+     *       よりモダンな代替手段 (例: Input Events Level 2) の採用も将来的には検討の余地あり。
      */
     insertSuggestion(suggestion) {
         const text = this.inputElement.value;
         const caretPos = this.inputElement.selectionStart; // 現在のカーソル位置
 
-        // トリガーが見つかっている場合、トリガーからカーソル位置までの部分を置換
-        const beforeText = text.substring(0, suggestion.triggerPos);
-        const afterText = text.substring(caretPos);
-        let newText;
-        if (suggestion.suggest !== "{filePath[]}") {
-            newText = beforeText + suggestion.suggest + afterText;
+        let textToInsert = suggestion.suggest;
+        let selectionStartAfterInsert = suggestion.triggerPos + textToInsert.length;
+        let selectionEndAfterInsert = selectionStartAfterInsert;
+
+        if (suggestion.suggest === "{filePath[]}") {
+            textToInsert = "{filePath[number]}";
+            const placeholder = "number";
+            // "number" を選択状態にするための開始位置と終了位置を計算
+            selectionStartAfterInsert = suggestion.triggerPos + "{filePath[".length;
+            selectionEndAfterInsert = selectionStartAfterInsert + placeholder.length;
         }
-        else {
-            newText = beforeText + "{filePath[number]}" + afterText;
-        }
-
-        this.inputElement.value = newText;
-
-        // 値が変更されたことを示すために 'input' イベントを手動で発火させる
-        // これにより、後続の updateSuggestions が適切に動作する
-        this.inputElement.dispatchEvent(new Event('input', { bubbles: true })); // bubbles: true を推奨
-
 
         this.inputElement.focus(); // 挿入後にテキストエリアにフォーカスを戻す
 
-        // 新しいカーソル位置を設定（挿入した文字列の直後）
-        if (suggestion.suggest !== "{filePath[]}") {
-            const newCaretPos = suggestion.triggerPos + suggestion.suggest.length;
-            this.inputElement.setSelectionRange(newCaretPos, newCaretPos);
+        // 1. 置き換える範囲 (トリガーの開始位置から現在のカーソル位置まで) を選択
+        this.inputElement.setSelectionRange(suggestion.triggerPos, caretPos);
+
+        // 2. 選択範囲にテキストを挿入 (これにより Undo/Redo スタックに記録される)
+        // document.execCommand は input イベントを自動的にトリガーするはず
+        const success = document.execCommand('insertText', false, textToInsert);
+
+        if (!success) {
+            // execCommand が失敗した場合のフォールバック (元の手動操作)
+            console.warn("document.execCommand('insertText') failed. Falling back to manual insertion.");
+            const beforeText = text.substring(0, suggestion.triggerPos);
+            const afterTextSubstring = text.substring(caretPos); // 元のカーソル位置以降のテキスト
+            this.inputElement.value = beforeText + textToInsert + afterTextSubstring;
+            // 手動で input イベントを発火
+            this.inputElement.dispatchEvent(new Event('input', { bubbles: true }));
         }
-        else {
-            const beginCaretPos = suggestion.triggerPos + suggestion.suggest.length + "number".length - "number]}".length;
-            const endCaretPos = suggestion.triggerPos + suggestion.suggest.length + "number".length - "]}".length;
-            this.inputElement.setSelectionRange(beginCaretPos, endCaretPos);
+        // `input` イベントは `execCommand` (成功時) またはフォールバック (失敗時) で発火される。
+        // これにより `updateSuggestions` が呼び出され、通常はサジェストリストが更新/非表示になる。
+
+        // 3. 新しいカーソル位置/選択範囲を設定
+        this.inputElement.setSelectionRange(selectionStartAfterInsert, selectionEndAfterInsert);
+
+        if (suggestion.suggest === "{filePath[]}") {
             this.hideSuggestions(); // サジェストリストを非表示にする
         }
     }
