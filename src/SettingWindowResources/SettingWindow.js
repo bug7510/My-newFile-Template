@@ -1,3 +1,4 @@
+
 const vscode = acquireVsCodeApi();
 const templateNameInput = document.getElementById('templateName');
 const filenameInput = document.getElementById('filename');
@@ -85,13 +86,7 @@ class SuggestionEditor {
         // サジェストリスト要素を生成し、入力要素の直後に挿入
         this.suggestionsDiv = document.createElement('div');
         this.suggestionsDiv.classList.add('suggestions-list');
-        // 入力要素の親要素を見つけて、その子として追加する（containerを使っている前提）
-        if (this.inputElement.parentElement) {
-            this.inputElement.parentElement.insertBefore(this.suggestionsDiv, this.inputElement.nextSibling);
-        } else {
-            // 親要素がない場合は、入力要素の直後に挿入
-            this.inputElement.parentNode.insertBefore(this.suggestionsDiv, this.inputElement.nextSibling);
-        }
+        document.body.appendChild(this.suggestionsDiv); // body に直接追加
 
         //  選択されているサジェスト項目のインデックス (-1 は何も選択されていない状態)
         this.ResetSelectedIndex();
@@ -243,10 +238,14 @@ class SuggestionEditor {
             if (filteredSuggestions.length !== 0) {
                 this.showSuggestions(filteredSuggestions); // サジェストを表示
                 this.updateHighlight(0); // ハイライトを解除
-                this.updateListPositionAndHeight(); // 位置と高さを調整
                 this.suggestionsDiv.style.display = 'block'; // リストを表示
+                requestAnimationFrame(() => {
+                    this.updateListPositionAndHeight(); // 位置と高さを調整
+                });
             }
-            else this.hideSuggestions(); // サジェストを表示しない
+            else {
+                this.hideSuggestions();
+            }; // サジェストを表示しない
 
         } else {
             // トリガー文字列で始まらない場合、サジェストを非表示
@@ -281,7 +280,6 @@ class SuggestionEditor {
             item.dataset.suggestion = this.suggestToString(suggestion); // 候補文字列をデータ属性に保持
             this.suggestionsDiv.appendChild(item);
         });
-
     }
     /** 
      * @param {{suggest:string,triggerPos:number}} suggest 
@@ -300,47 +298,128 @@ class SuggestionEditor {
         const triggerPos = parseInt(parts[1].split(':')[1]);
         return { suggest, triggerPos };
     }
+
+    /**
+     * 1行分の高さを計算する。
+     * @returns テキストエリアの1行分の長さ
+     */
+    getLineHeight() {
+        const computedLineHeight = getComputedStyle(this.inputElement).lineHeight;
+        let lineHeight = parseFloat(computedLineHeight);
+        if (isNaN(lineHeight)) {
+            // 'normal' の場合など、parseFloat が NaN を返す場合のフォールバック
+            // 例えば、フォントサイズを基準にする (1.2倍など) か、固定値を設定
+            const fontSize = parseFloat(computedLineHeight.fontsize);
+            lineHeight = isNaN(fontSize) ? 16 : fontSize * 1.2; // デフォルト16px、またはフォントサイズの1.2倍
+        }
+        return lineHeight;
+    }
+    /**
+      * テキスト入力内の指定された選択箇所におけるspanの絶対位置のx、y座標を返却
+      * @param {HTMLTextAreaElement | HTMLInputElement} input - 座標を取得する入力要素
+      * @param {number} selectionPoint - 入力の選択箇所
+     */
+    getCursorXY(input, selectionPoint) {
+        const {
+            offsetLeft: inputX,
+            offsetTop: inputY,
+        } = input;
+
+        // 入力のクローンとなるダミー要素を作成
+        const div = document.createElement('div');
+
+        // 入力の計算されたスタイルを取得し、ダミー要素にコピー
+        const copyStyle = getComputedStyle(input);
+        for (const prop of copyStyle) {
+            div.style[prop] = copyStyle[prop]
+        }
+
+        div.style.position = "fixed";
+        div.style.top = "0px";
+        div.style.left = "0px";
+        //透明にする
+        div.style.opacity = 0;
+
+        // <input/>の場合空白を置き換える
+        const swap = '.';
+        const inputValue = input.tagName === 'INPUT' ? input.value.replace(/ /g, swap) : input.value;
+
+        // テキストエリアの選択箇所までのdivの内容を設定する
+        const textContent = inputValue.substring(0, selectionPoint);
+
+        // ダミー要素divのテキストコンテンツを設定
+        div.textContent = textContent;
+        if (input.tagName === 'TEXTAREA') div.style.height = 'auto';
+        if (input.tagName === 'INPUT') div.style.width = 'auto';
+
+        // span要素を作成してキャレット位置を取得する
+        const span = document.createElement('span')
+        // テキストエリアの選択箇所までの入力内容を設定する
+        span.textContent = inputValue.substring(selectionPoint) || '.'
+
+        // ダミー要素にspanマーカーを追加
+        div.appendChild(span)
+
+        // ダミー要素をbodyに追加
+        document.body.appendChild(div)
+        const { offsetLeft: spanX, offsetTop: spanY } = span;
+
+        document.body.removeChild(div)
+        return {
+            x: inputX + spanX,
+            y: inputY + spanY,
+        }
+    }
     /**
      * サジェストリストの位置（必要に応じて）と最大高さを更新する
      * ウィンドウのリサイズやスクロール時にも呼ばれる
      */
-    updateListPositionAndHeight() {
-        // リストが非表示の場合は何もしない
-        if (this.suggestionsDiv.style.display === 'none') {
-            return;
-        }
+    updateListPositionAndHeight() {    // リストが非表示の場合は何もしない
+        if (this.suggestionsDiv.style.display === 'none') return;
+        const lineHeight = this.getLineHeight();
+        const {
+            x: cursorX,
+            y: cursorY
+        } = this.getCursorXY(this.inputElement, this.inputElement.selectionStart);
+
         const maxHeight = 100;//リストの最大高さ
         const inputRect = this.inputElement.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
-        const bottomMargin = 10; // ページ下端からの余白 (px)
+        /**@type {number} */
+        const windowMargin = 10; // ページ下端からの余白 (px)
 
         // 入力要素の下端からウィンドウの下端までの距離
-        const spaceBelow = viewportHeight - inputRect.bottom - bottomMargin;
-
+        const spaceBelow = viewportHeight - (cursorY + lineHeight) - windowMargin;
         // 入力要素の上端からウィンドウの上端までの距離
+        const spaceAbove = cursorY - windowMargin;
 
-        // デフォルトでは下に表示する
-        this.suggestionsDiv.style.top = '100%'; // 親要素 (.editor-container) の下端に
-        this.suggestionsDiv.style.bottom = 'auto';
-
-        const topMargin = 10; // ページ上端からの余白 (px)
-        const spaceAbove = inputRect.top - topMargin;
+        // 縦位置決定ロジック
         const listHeight = this.suggestionsDiv.offsetHeight; // 現在のリストの高さ（表示されていれば）
         if (spaceBelow < listHeight && spaceAbove > spaceBelow) {
             // 下に収まらず、かつ上にスペースがある程度ある場合、上に表示
             this.suggestionsDiv.style.top = 'auto';
-            this.suggestionsDiv.style.bottom = '100%'; // 入力要素の上に
+            this.suggestionsDiv.style.bottom = `${cursorY + windowMargin}px`; // 入力要素の上に
             this.suggestionsDiv.style.maxHeight = `${Math.max(50, Math.min(spaceAbove, maxHeight))}px`; // 上方向の利用可能なスペースを max-height に
         } else {
             // それ以外の場合は下に表示 (デフォルト)
-            this.suggestionsDiv.style.top = '100%';
+            this.suggestionsDiv.style.top = `${cursorY + lineHeight + windowMargin}px`;
             this.suggestionsDiv.style.bottom = 'auto';
             this.suggestionsDiv.style.maxHeight = `${Math.max(50, Math.min(spaceBelow, maxHeight))}px`;
         }
 
+        // 横位置決定
+        // カーソルの左位置に合わせる
+        this.suggestionsDiv.style.left = `${cursorX}px`;
+
+        const listRect = this.suggestionsDiv.getBoundingClientRect();
+        if (listRect.right > window.innerWidth) {
+            this.suggestionsDiv.style.right = `${cursorX}px`;
+        }
         // リストの幅を入力要素に合わせる（CSSで width: 100% にしていれば親要素依存になるので不要な場合も）
         // this.suggestionsDiv.style.width = `${inputRect.width}px`;
     }
+
+
     /**
      * サジェスト候補を非表示にする
      */
@@ -355,7 +434,6 @@ class SuggestionEditor {
     updateHighlight(newIndex) {
         const items = this.suggestionsDiv.querySelectorAll('.suggestion-item');
         const itemCount = items.length;
-        console.log(`itemCount: ${itemCount}`);
 
         if (itemCount === 0) {
             this.ResetSelectedIndex();
@@ -379,7 +457,6 @@ class SuggestionEditor {
         if (items[safeIndex]) {
             items[safeIndex].classList.add('selected');
             this.selectedIndex = safeIndex;
-            console.log(`selectedIndex: ${safeIndex}`);
 
             // 選択された項目がスクロールビューに収まるようにする
             items[safeIndex].scrollIntoView({
@@ -529,8 +606,7 @@ class SuggestionEditor {
         const success = document.execCommand('insertText', false, textToInsert);
 
         if (!success) {
-            // execCommand が失敗した場合のフォールバック (元の手動操作)
-            console.warn("document.execCommand('insertText') failed. Falling back to manual insertion.");
+            // execCommand が失敗した場合のフォールバック (元の手動操作);
             const beforeText = text.substring(0, suggestion.triggerPos);
             const afterTextSubstring = text.substring(caretPos); // 元のカーソル位置以降のテキスト
             this.inputElement.value = beforeText + textToInsert + afterTextSubstring;
