@@ -142,6 +142,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		}
 	);
+
 	let editTemplateDisposable = vscode.commands.registerCommand(
 		'MyNewFileTemplate.template.global.edit',
 		async (uri: vscode.Uri) => {
@@ -159,6 +160,28 @@ export function activate(context: vscode.ExtensionContext) {
 					const config = getTemplateConfiguration();
 					config.update('Templates', updatedConfigs, vscode.ConfigurationTarget.Global);
 
+				}
+			}
+		}
+	);
+	let duplicateTemplateInGlobalDisposable = vscode.commands.registerCommand(
+		'MyNewFileTemplate.template.global.duplicate',
+		async (uri: vscode.Uri) => {
+			const TemplatesConfig = getTemplatesFromConfig();
+
+			const selectedItem = await openTemplatesQuickPickSelectOne(TemplatesConfig, '複製するテンプレートを選択');
+			if (selectedItem) {
+				vscode.window.showInformationMessage(
+					`"${selectedItem.templateConfig.templateName}"を複製しました`
+				);
+				const editedConfig = await showTemplateEditWindow(context, selectedItem.templateConfig);
+				if (editedConfig) {
+					TemplatesConfig.push(editedConfig);
+					const config = getTemplateConfiguration();
+					config.update('Templates', TemplatesConfig, vscode.ConfigurationTarget.Global);
+					vscode.window.showInformationMessage(
+						`"${editedConfig.templateName}"を作成しました`
+					);
 				}
 			}
 		}
@@ -186,6 +209,7 @@ export function activate(context: vscode.ExtensionContext) {
 		settingWindowDisposable,
 		createTemplateInGlobalDisposable,
 		editTemplateDisposable,
+		duplicateTemplateInGlobalDisposable,
 		deleteTemplateDisposable);
 }
 
@@ -279,6 +303,7 @@ function openEditOptionQuickPick() {
 	enum editChoice {
 		create,
 		edit,
+		duplicate,
 		delete
 	}
 	interface editOption extends vscode.QuickPickItem {
@@ -298,6 +323,11 @@ function openEditOptionQuickPick() {
 			choice: editChoice.edit,
 		},
 		{
+			label: '既存テンプレートから新規テンプレートを作成',
+			description: 'MyNewFileTemplate.template.global.duplicate',
+			choice: editChoice.duplicate,
+		},
+		{
 			label: 'テンプレートの削除',
 			description: 'MyNewFileTemplate.template.global.delete',
 			choice: editChoice.delete,
@@ -313,6 +343,9 @@ function openEditOptionQuickPick() {
 						break;
 					case editChoice.edit:
 						vscode.commands.executeCommand('MyNewFileTemplate.template.global.edit');
+						break;
+					case editChoice.duplicate:
+						vscode.commands.executeCommand('MyNewFileTemplate.template.global.duplicate');
 						break;
 					case editChoice.delete:
 						vscode.commands.executeCommand('MyNewFileTemplate.template.global.delete');
