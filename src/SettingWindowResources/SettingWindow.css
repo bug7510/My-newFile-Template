@@ -140,3 +140,5 @@ textarea:focus {
     color: var(--vscode-editor-background);
     background-color: var(--vscode-editor-foreground);
 }
+
+/* TODO:スクロールバーにボタンがあるなど、キモい*/

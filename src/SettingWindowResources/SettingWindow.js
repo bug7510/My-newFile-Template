@@ -366,8 +366,8 @@ class SuggestionEditor {
 
         document.body.removeChild(div)
         return {
-            x: inputX + spanX,
-            y: inputY + spanY,
+            x: inputX + spanX - screenLeft,
+            y: inputY + spanY - this.inputElement.scrollTop,
         }
     }
     /**
@@ -383,7 +383,6 @@ class SuggestionEditor {
         } = this.getCursorXY(this.inputElement, this.inputElement.selectionStart);
 
         const maxHeight = 100;//リストの最大高さ
-        const inputRect = this.inputElement.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
         /**@type {number} */
         const windowMargin = 10; // ページ下端からの余白 (px)
@@ -398,7 +397,7 @@ class SuggestionEditor {
         if (spaceBelow < listHeight && spaceAbove > spaceBelow) {
             // 下に収まらず、かつ上にスペースがある程度ある場合、上に表示
             this.suggestionsDiv.style.top = 'auto';
-            this.suggestionsDiv.style.bottom = `${cursorY + windowMargin}px`; // 入力要素の上に
+            this.suggestionsDiv.style.bottom = `${viewportHeight - (cursorY + lineHeight) + windowMargin}px`; // 入力要素の上に
             this.suggestionsDiv.style.maxHeight = `${Math.max(50, Math.min(spaceAbove, maxHeight))}px`; // 上方向の利用可能なスペースを max-height に
         } else {
             // それ以外の場合は下に表示 (デフォルト)
