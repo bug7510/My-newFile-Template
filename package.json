@@ -1,10 +1,15 @@
 {
   "name": "mynewfiletemplate",
-  "displayName": "MyNewFileTemplate",
-  "description": "can sets settings about new file",
+  "displayName": "My newFile Template",
+  "description": "You can sets template to make it easier to create new file.",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.99.0"
+  },
+  "publisher": "bug7510",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bug7510/NewFileTemplate.git"
   },
   "categories": [
     "Other"
@@ -17,7 +22,7 @@
       "properties": {
         "MyNewFileTemplate.Templates": {
           "type": "array",
-          "markdownDescription": "ファイル作成時に参照するテンプレートを設定できます。\n\n\n\n\n{filePath[0]}は入力したファイル名。\n{filePath[1]}はファイルが作成されるフォルダ名。\n{filePath[2]}はその上のフォルダ、{filePath[3]}はその上の……\n\n[ワークスペースのテンプレート表示設定](command:MyNewFileTemplate.template.workspace.hide)\n\n[テンプレートの編集](command:MyNewFileTemplate.template.global)",
+          "markdownDescription": "ファイル作成時に参照するテンプレートを設定できます。\n\n\n\n\n{filePath[1]}のように、テンプレート内で{filePath[]}の\"[]\"内に数値を入れた文字列を挿入すると、ファイル作成時、それらのプレースホルダーはパスを利用した文字列に置換され。ファイルの内容が作成されます。\n{filePath[0]}は入力されたファイル名です。\n\n[ワークスペースのテンプレート表示設定](command:MyNewFileTemplate.template.workspace.hide)\n\n[テンプレートの編集](command:MyNewFileTemplate.template.global)",
           "default": [
             {
               "templateName": "空のテキストファイル",
@@ -43,6 +48,11 @@
               "templateName": "C#: クラスファイル（Namespaceあり）",
               "filename": "{filePath[0]}.cs",
               "template": "namespace {filePath[1]}{\n    public class {filePath[0]}{\n        \n    }\n}"
+            },
+            {
+              "templateName": "Unity:MonoBehabiour",
+              "filename": "{filePath[0]}.cs",
+              "template": "using UnityEngine;\n\npublic class {filePath[0]}:MonoBehaviour\n{\n    \n}\n"
             }
           ],
           "items": {
@@ -137,6 +147,7 @@
     ]
   },
   "scripts": {
+    "make-package": "npm run refer-Document&&npx vsce package&&npm run hide-Document",
     "vscode:prepublish": "npm run package",
     "compile": "webpack",
     "watch": "webpack --watch --mode development --config ./configs/webpack.config.js",
@@ -145,11 +156,19 @@
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "refer-Document": "npm run refer-README&&npm run refer-CHANGELOG&&npm run refer-LICENSE",
+    "refer-README": "node -e \"require('fs').copyFileSync('DOCUMENTS/README.md', 'README.md');\"",
+    "refer-CHANGELOG": "node -e \"require('fs').copyFileSync('DOCUMENTS/CHANGELOG.md', 'CHANGELOG.md');\"",
+    "refer-LICENSE": "node -e \"require('fs').copyFileSync('DOCUMENTS/LICENSE.md', 'LICENSE.md');\"",
+    "hide-Document": "npm run hide-README&&npm run hide-CHANGELOG&&npm run hide-LICENSE",
+    "hide-README": "node -e \"require('fs').unlinkSync('README.md');\"",
+    "hide-CHANGELOG": "node -e \"require('fs').unlinkSync('CHANGELOG.md');\"",
+    "hide-LICENSE": "node -e \"require('fs').unlinkSync('LICENSE.md');\""
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
-    "@types/node": "20.x",
+    "@types/node": "^20.17.47",
     "@types/vscode": "^1.99.0",
     "@typescript-eslint/eslint-plugin": "^8.31.1",
     "@typescript-eslint/parser": "^8.31.1",

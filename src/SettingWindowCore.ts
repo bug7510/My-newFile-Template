@@ -22,7 +22,7 @@ export async function showTemplateEditWindow(context: vscode.ExtensionContext, i
     })
     : Promise<TemplateConfig | undefined> {
 
-    const windowResourcesFolderPath = path.join(context.extensionPath, 'src', 'SettingWindowResources');
+    const windowResourcesFolderPath = path.join(context.extensionPath, 'dist', 'SettingWindowResources');
     const panel = vscode.window.createWebviewPanel(
         'templateEdit', // パネルの識別子 (内部用)
         'MyNewFileTemplate', // パネルのタイトル
@@ -82,11 +82,11 @@ export async function showTemplateEditWindow(context: vscode.ExtensionContext, i
                             panel.dispose(); // パネルを閉じる
                         }
                         else {
-                            vscode.window.showErrorMessage("This template is not changed at all.");
+                            vscode.window.showErrorMessage("テンプレートを変更してください。");
                         }
                     }
                     else {
-                        vscode.window.showErrorMessage("Fill all Textarea.");
+                        vscode.window.showErrorMessage("入力されていない項目があります。");
                     }
                     break;
                 case CommandKey.cancelCommand:

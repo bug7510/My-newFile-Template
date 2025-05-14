@@ -1,6 +1,8 @@
-# newfiletemplate README
+# ファイル作成が楽になる！
 
-This is the README for your extension "newfiletemplate". After writing up a brief description, we recommend including the following sections.
+Todo：りどみ
+
+拡張機能の設定で設定したテンプレートから新規ファイルを作成できます。
 
 ## Features
 
