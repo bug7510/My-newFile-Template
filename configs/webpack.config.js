@@ -5,6 +5,7 @@
 const path = require('path');
 const { config } = require('process');
 const { findConfigFile } = require('typescript');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 //@ts-check
 /** @typedef {import('webpack').Configuration} WebpackConfig **/
@@ -19,7 +20,8 @@ const extensionConfig = {
     // the bundle is stored in the 'dist' folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/
     path: path.resolve(__dirname, '../dist'),
     filename: 'extension.js',
-    libraryTarget: 'commonjs2'
+    libraryTarget: 'commonjs2',
+    devtoolModuleFilenameTemplate: '../[resource-path]',
   },
   externals: {
     vscode: 'commonjs vscode' // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
@@ -29,6 +31,17 @@ const extensionConfig = {
     // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
     extensions: ['.ts', '.js']
   },
+  plugins: [
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: path.resolve(__dirname, '../src/SettingWindowResources'), // コピー元のリソースフォルダ
+          to: path.resolve(__dirname, '../dist/SettingWindowResources'),   // コピー先 (dist内)
+        },
+        // 他にコピーしたいリソースがあればここに追加
+      ],
+    }),
+  ],
   module: {
     rules: [
       {

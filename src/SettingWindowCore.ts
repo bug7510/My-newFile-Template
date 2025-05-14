@@ -22,7 +22,7 @@ export async function showTemplateEditWindow(context: vscode.ExtensionContext, i
     })
     : Promise<TemplateConfig | undefined> {
 
-    const windowResourcesFolderPath = path.join(context.extensionPath, 'src', 'SettingWindowResources');
+    const windowResourcesFolderPath = path.join(context.extensionPath, 'dist', 'SettingWindowResources');
     const panel = vscode.window.createWebviewPanel(
         'templateEdit', // パネルの識別子 (内部用)
         'MyNewFileTemplate', // パネルのタイトル

@@ -97,6 +97,10 @@ export function activate(context: vscode.ExtensionContext) {
 					vscode.window.showInformationMessage(
 						`"${createdConfig.templateName}"を作成しました`
 					);
+					const config = getTemplateConfiguration();
+					const templatesConfig = getTemplatesFromConfig();
+					templatesConfig.push(createdConfig);
+					config.update('Templates', templatesConfig, vscode.ConfigurationTarget.Global);
 					// ★ 例: 編集したテンプレートを新しい設定として追加する場合 ★
 					// const addAsNew = await vscode.window.showInformationMessage(
 					//     `編集した内容を新しいテンプレートとして保存しますか？`,
