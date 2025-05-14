@@ -85,6 +85,11 @@
           "command": "MyNewFileTemplate.newFile",
           "when": "explorerResourceIsFolder||explorerResourceIsRoot",
           "group": "navigation@1"
+        },
+        {
+          "command": "MyNewFileTemplate.templateFromFile",
+          "when": "!explorerResourceIsFolder&&!explorerResourceIsRoot",
+          "group": "navigation@1"
         }
       ]
     },
@@ -92,6 +97,11 @@
       {
         "command": "MyNewFileTemplate.newFile",
         "title": "テンプレートから作成",
+        "category": "MyNewFileTemplate"
+      },
+      {
+        "command": "MyNewFileTemplate.templateFromFile",
+        "title": "ファイルからテンプレートを作成",
         "category": "MyNewFileTemplate"
       },
       {
@@ -112,6 +122,11 @@
       {
         "command": "MyNewFileTemplate.template.global.edit",
         "title": "既存テンプレート編集",
+        "category": "MyNewFileTemplate"
+      },
+      {
+        "command": "MyNewFileTemplate.template.global.duplicate",
+        "title": "既存テンプレートから新規テンプレートを作成",
         "category": "MyNewFileTemplate"
       },
       {

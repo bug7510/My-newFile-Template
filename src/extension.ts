@@ -67,6 +67,57 @@ export function activate(context: vscode.ExtensionContext) {
 				);
 		}
 	);
+	let templateFromFileDisposable = vscode.commands.registerCommand(
+		'MyNewFileTemplate.templateFromFile',
+		async (uri: vscode.Uri) => {
+			if (!uri || uri.scheme !== 'file') {
+				vscode.window.showErrorMessage('ファイルを選択してください。');
+				return;
+			}
+			const filePath = uri.fsPath; // ファイルシステムのパスを取得
+			const selectedFileName = path.basename(filePath); // ファイル名を取得
+			try {
+				// ★ ファイルの内容を読み込む (非同期) ★
+				const fileContent = await fs.promises.readFile(filePath, 'utf8');
+				const creatingFileName = `{filePath[0]}${path.extname(filePath)}`
+
+				// Webviewウィンドウの初期値を作成
+				const initialConfig: TemplateConfig = {
+					templateName: selectedFileName, // 初期テンプレート名としてファイル名を使用
+					filename: creatingFileName,     // 初期ファイル名としてファイル名を使用
+					template: fileContent   // ファイルの内容をテンプレート内容として使用
+				};
+
+				// ★ カスタムテンプレート編集ウィンドウを表示 ★
+				// showTemplateEditWindow メソッドは Webview メディアURI を必要とします
+				const createdConfig = await showTemplateEditWindow(context, initialConfig);
+
+				// Webviewウィンドウが閉じられた後の処理 (例: 決定が押された場合のデータ利用)
+				if (createdConfig) {
+					vscode.window.showInformationMessage(
+						`"${createdConfig.templateName}"を作成しました`
+					);
+					// ★ 例: 編集したテンプレートを新しい設定として追加する場合 ★
+					// const addAsNew = await vscode.window.showInformationMessage(
+					//     `編集した内容を新しいテンプレートとして保存しますか？`,
+					//     '保存', 'キャンセル'
+					// );
+					// if (addAsNew === '保存') {
+					//     await addNewTemplate(editedData); // 前に作ったaddNewTemplate関数を呼び出す
+					// }
+
+				} else {
+					// キャンセルされた場合
+					vscode.window.showInformationMessage('テンプレート編集をキャンセルしました。');
+				}
+
+			} catch (error: any) {
+				// ファイル読み込みなどに失敗した場合のエラーハンドリング
+				vscode.window.showErrorMessage(`ファイルの読み込みに失敗しました: ${error.message}`);
+				console.error('Failed to read file:', error);
+			}
+		}
+	);
 
 	let hideTemplateInWorkSpaceDisposable = vscode.commands.registerCommand(
 		'MyNewFileTemplate.template.workspace.hide',
@@ -142,7 +193,6 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		}
 	);
-
 	let editTemplateDisposable = vscode.commands.registerCommand(
 		'MyNewFileTemplate.template.global.edit',
 		async (uri: vscode.Uri) => {
@@ -174,7 +224,11 @@ export function activate(context: vscode.ExtensionContext) {
 				vscode.window.showInformationMessage(
 					`"${selectedItem.templateConfig.templateName}"を複製しました`
 				);
-				const editedConfig = await showTemplateEditWindow(context, selectedItem.templateConfig);
+				const editedConfig = await showTemplateEditWindow(context, {
+					templateName: `${selectedItem.templateConfig.templateName}のコピー`,
+					filename: selectedItem.templateConfig.filename,
+					template: selectedItem.templateConfig.template
+				});
 				if (editedConfig) {
 					TemplatesConfig.push(editedConfig);
 					const config = getTemplateConfiguration();
