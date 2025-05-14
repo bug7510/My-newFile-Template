@@ -83,7 +83,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 				// Webviewウィンドウの初期値を作成
 				const initialConfig: TemplateConfig = {
-					templateName: selectedFileName, // 初期テンプレート名としてファイル名を使用
+					templateName: "新しいテンプレート", // 初期テンプレート名としてファイル名を使用
 					filename: creatingFileName,     // 初期ファイル名としてファイル名を使用
 					template: fileContent   // ファイルの内容をテンプレート内容として使用
 				};
@@ -263,6 +263,7 @@ export function activate(context: vscode.ExtensionContext) {
 		});
 	// 拡張機能が非アクティブになる際に登録したコマンドを解放
 	context.subscriptions.push(newFileDisposable,
+		templateFromFileDisposable,
 		hideTemplateInWorkSpaceDisposable,
 		settingWindowDisposable,
 		createTemplateInGlobalDisposable,
