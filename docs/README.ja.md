@@ -1,7 +1,10 @@
 # My newFile Template 
 ## ファイル作成を可能な限り簡単に
 
-**My newFile Template** は、VS Codeにおけるすべての新規ファイル作成体験を向上させるための拡張機能です。簡単にカスタマイズ可能なテンプレートを利用して、定型的なファイル作成の手間を大幅に削減し、開発の初期段階をスムーズにします。
+**My newFile Template** は、VS Codeにおけるすべての新規ファイル作成体験を向上させるための拡張機能です。自由にカスタマイズ可能なテンプレートを利用して、定型的なファイル作成の手間を大幅に削減し、スムーズな開発が可能になります。
+
+
+![firstImpression](./ReadmeResource/ja/firstImpression.gif)
 
 ## 特徴
 
