@@ -1,7 +1,7 @@
 {
   "name": "mynewfiletemplate",
   "displayName": "My newFile Template",
-  "description": "You can sets template to make it easier to create new file.",
+  "description": "Let newFile more Easy.",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.99.0"
@@ -9,7 +9,7 @@
   "publisher": "bug7510",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bug7510/NewFileTemplate.git"
+    "url": "https://github.com/bug7510/My-newFile-template.git"
   },
   "categories": [
     "Snippets",

@@ -9,9 +9,9 @@ All rights regarding the source code of this software belong to the copyright ho
 
 ## Purpose of the Product / 成果物の目的
 
-"NewFileTemplate"（以下、"本拡張機能"）は、VS Codeに導入され、本拡張機能を使用する人物（以下、"ユーザー"）による新規ファイル作成時の労力を軽減することを目的としたVS Code拡張機能です。
+"My newFile Template"（以下、"本拡張機能"）は、VS Codeに導入され、本拡張機能を使用する人物（以下、"ユーザー"）による新規ファイル作成時の労力を軽減することを目的としたVS Code拡張機能です。
 
-"NewFileTemplate" (hereinafter referred to as "this extension") is a VS Code extension intended to be installed in VS Code, with the purpose of reducing the effort required by the person using this extension (hereinafter referred to as "the user") when creating new files.
+"My newFile Template" (hereinafter referred to as "this extension") is a VS Code extension intended to be installed in VS Code, with the purpose of reducing the effort required by the person using this extension (hereinafter referred to as "the user") when creating new files.
 
 ユーザーは、本拡張機能をVS Codeにインストールすること、利用することが可能です。
 
