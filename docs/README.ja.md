@@ -4,7 +4,7 @@
 
 **My newFile Template** は、VS Codeにおけるすべての新規ファイル作成体験を向上させるための拡張機能です。自由にカスタマイズ可能なテンプレートを利用して、定型的なファイル作成の手間を大幅に削減し、スムーズな開発が可能になります。
 
-![firstImpression](./ReadmeResource/ja/firstImpression.gif)
+<img alt="firstImpression"  src="./ReadmeResource/ja/firstImpression.gif" width="600">
 
 ## 特徴
 
@@ -17,9 +17,16 @@
 
 ### テンプレートによる新規ファイル作成
 
-1. エクスプローラーのフォルダーを右クリックします。
+1. ファイルを作りたいフォルダーを右クリックします。
+2. 右クリックメニューで"テンプレートから作成"を選択します。
+3. テンプレートを選択します。
+4. ファイル名を入力すればファイル作成完了です。
+<img alt="how to make file with template"  src="./ReadmeResource/ja/firstImpression.gif" width="600">
 
-2. 右クリックメニューで
+### テンプレートの作成
+
+#### ファイルからテンプレート作成
+
 
 ## ⚙️ 設定項目
 
