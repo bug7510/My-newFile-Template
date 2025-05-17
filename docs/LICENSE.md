@@ -17,8 +17,8 @@ All rights regarding the source code of this software belong to the copyright ho
 
 The user is permitted to install and use this extension in VS Code.
 
-
 ## Prohibitions / 禁則事項
+
 ユーザーによる以下の行為は、明示的な許可なく行うことを**禁じます**。
 
 * 本ソフトウェアのソースコードの複製、またはそれに類する行為
@@ -28,10 +28,10 @@ The user is permitted to install and use this extension in VS Code.
 
 The following actions by the user are **prohibited** without explicit permission:
 
-*   Duplication of the source code of this software, or similar acts.
-*   Modification of the source code of this software.
-*   Redistribution of this software (e.g., distribution outside the VS Code Marketplace).
-*   Creation and publication of derivative works based on this software.
+* Duplication of the source code of this software, or similar acts.
+* Modification of the source code of this software.
+* Redistribution of this software (e.g., distribution outside the VS Code Marketplace).
+* Creation and publication of derivative works based on this software.
   
 ## Contributions / 貢献について
 
