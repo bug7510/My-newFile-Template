@@ -75,20 +75,29 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 			const filePath = uri.fsPath; // ファイルシステムのパスを取得
-			const selectedFileName = path.basename(filePath); // ファイル名を取得
 			try {
-				// ★ ファイルの内容を読み込む (非同期) ★
-				const fileContent = await fs.promises.readFile(filePath, 'utf8');
-				const creatingFileName = `{filePath[0]}${path.extname(filePath)}`
+
+				// タイムアウト用の Promise
+				const timeoutPromise: Promise<never> = new Promise((_, reject) => {
+					const id = setTimeout(() => {
+						// 指定時間が経過したら、TimeoutError で Promise を拒否
+						// Promise.race は最初に拒否された Promise の結果を返す
+						reject(new TimeoutError("ファイル読み込みに失敗しました。無効なファイルか、ファイルサイズが大きすぎる可能性があります"));
+					}, 1000);
+				});
+				const readFilePromise = fs.promises.readFile(filePath, 'utf8');
+				//  ファイルの内容を読み込む (非同期) 
+				const fileContent = await Promise.race([timeoutPromise, readFilePromise]);
+				const creatingFileName = `{filePath[0]}${path.extname(filePath)}`;
 
 				// Webviewウィンドウの初期値を作成
 				const initialConfig: TemplateConfig = {
-					templateName: "新しいテンプレート", // 初期テンプレート名としてファイル名を使用
-					filename: creatingFileName,     // 初期ファイル名としてファイル名を使用
+					templateName: "新しいテンプレート",
+					filename: creatingFileName,     // 初期ファイル名としてファイル名の拡張子を使用
 					template: fileContent   // ファイルの内容をテンプレート内容として使用
 				};
 
-				// ★ カスタムテンプレート編集ウィンドウを表示 ★
+				// カスタムテンプレート編集ウィンドウを表示 
 				// showTemplateEditWindow メソッドは Webview メディアURI を必要とします
 				const createdConfig = await showTemplateEditWindow(context, initialConfig);
 
@@ -101,7 +110,7 @@ export function activate(context: vscode.ExtensionContext) {
 					const templatesConfig = getTemplatesFromConfig();
 					templatesConfig.push(createdConfig);
 					config.update('Templates', templatesConfig, vscode.ConfigurationTarget.Global);
-					// ★ 例: 編集したテンプレートを新しい設定として追加する場合 ★
+					//  例: 編集したテンプレートを新しい設定として追加する場合 
 					// const addAsNew = await vscode.window.showInformationMessage(
 					//     `編集した内容を新しいテンプレートとして保存しますか？`,
 					//     '保存', 'キャンセル'
@@ -115,10 +124,19 @@ export function activate(context: vscode.ExtensionContext) {
 					vscode.window.showInformationMessage('テンプレート編集をキャンセルしました。');
 				}
 
-			} catch (error: any) {
+			} catch (error: unknown) {
 				// ファイル読み込みなどに失敗した場合のエラーハンドリング
-				vscode.window.showErrorMessage(`ファイルの読み込みに失敗しました: ${error.message}`);
-				console.error('Failed to read file:', error);
+				if (error instanceof Error) {
+					let errorMessage: string;
+					if (error instanceof TimeoutError) {
+						errorMessage = error.message;
+					}
+					else {
+						errorMessage = `ファイルの読み込みに失敗しました: ${error.message}`;
+					}
+					vscode.window.showErrorMessage(errorMessage);
+					console.error(`${errorMessage}:}`, error);
+				}
 			}
 		}
 	);
@@ -323,6 +341,7 @@ async function makeFile(fileName: string, filePath: string, fileContents: string
 
 		// fs.writeFileでファイルを作成 (ファイルが存在する場合は上書きされます)
 		// ファイルが存在するか確認したい場合は fs.existsSync などで事前にチェック
+
 		await fs.promises.writeFile(filePath, fileContents); // 空のファイルを作成
 
 		vscode.window.showInformationMessage(`${fileName}を作成しました。`);
@@ -331,10 +350,13 @@ async function makeFile(fileName: string, filePath: string, fileContents: string
 		const fileUri = vscode.Uri.file(filePath);
 		await vscode.window.showTextDocument(fileUri);
 
-	} catch (error: any) {
-		// エラーハンドリング
-		vscode.window.showErrorMessage(`ファイルの作成に失敗しました: ${error.message}`);
-		console.error('ファイル作成エラー:', error);
+	}
+	catch (error) {
+		if (error instanceof Error) {
+			// エラーハンドリング
+			vscode.window.showErrorMessage(`ファイルの作成に失敗しました: ${error.message}`);
+			console.error('ファイル作成エラー:', error);
+		}
 	}
 }
 
@@ -413,6 +435,12 @@ function openEditOptionQuickPick() {
 				editQuickPickChain.dispose();
 			})
 		.show();
+}
+class TimeoutError extends Error {
+	constructor(message: string) {
+		super(message);
+		this.name = 'TimeoutError';
+	}
 }
 // This method is called when your extension is deactivated
 export function deactivate() { }
