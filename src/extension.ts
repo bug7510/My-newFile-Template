@@ -6,6 +6,8 @@ import * as vscode from 'vscode';
 import { TemplateConfig } from './TemplateConfig'
 import { showTemplateEditWindow } from './SettingWindowCore'
 import { quickPickChain } from './QuickPickChain';
+import { TimeoutError } from './TimeoutError';
+
 interface pickTemplate extends vscode.QuickPickItem {
 	label: string;
 	description: string;
@@ -435,12 +437,6 @@ function openEditOptionQuickPick() {
 				editQuickPickChain.dispose();
 			})
 		.show();
-}
-class TimeoutError extends Error {
-	constructor(message: string) {
-		super(message);
-		this.name = 'TimeoutError';
-	}
 }
 // This method is called when your extension is deactivated
 export function deactivate() { }

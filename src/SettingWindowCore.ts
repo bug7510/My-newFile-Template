@@ -3,6 +3,7 @@ import { CommandKey } from './CommandKey.js'
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { TimeoutError } from './TimeoutError.js';
 
 const FILENAME = "SettingWindow";
 const PLACEHOLDER = "{cspSource}";
@@ -10,13 +11,7 @@ const SECURITYPOLICY = "{securityPolicy}";
 const WEBVIEW_READY_TIMEOUT_MS = 100; // Webviewがreadyコマンドを送信するまでのタイムアウト
 const INITIAL_DATA_PROCESSING_TIMEOUT_MS = 500; // initialConfig送信後、WebviewがUI準備完了を通知するまでのタイムアウト
 
-// TimeoutErrorクラス (extension.tsにも同様のクラスがあるため、共通化を推奨)
-class TimeoutError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = 'TimeoutError';
-    }
-}
+
 
 /**
  * テンプレート設定用のカスタム入力ウィンドウを表示する非同期メソッド。
