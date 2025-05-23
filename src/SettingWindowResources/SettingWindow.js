@@ -35,10 +35,13 @@ window.addEventListener('message', event => {
         case 'initialData':
             // 初期データが送られてきたらフォームに設定
             if (message.data) {
+                vscode.postMessage({ command: "dataReceived" });
                 templateNameInput.value = message.data.templateName || '';
                 filenameInput.value = message.data.filename || '';
                 templateContentTextarea.value = message.data.template || '';
+                vscode.postMessage({ command: "dataProcessed" });
             }
+            else vscode.postMessage({ command: "nullDataReceived" });
             break;
     }
 });
