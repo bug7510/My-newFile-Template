@@ -13,9 +13,9 @@ All rights regarding the source code of this software belong to the copyright ho
 
 "My newFile Template" (hereinafter referred to as "this extension") is a VS Code extension intended to be installed in VS Code, with the purpose of reducing the effort required by the person using this extension (hereinafter referred to as "the user") when creating new files.
 
-ユーザーは、本拡張機能をVS Codeにインストールすること、利用することが可能です。
+ユーザーは、本拡張機能をVS Codeにインストールし利用できます。また本拡張機能を利用して制作した創作物の公開も可能です。
 
-The user is permitted to install and use this extension in VS Code.
+The user is permitted to install and use this extension in VS Code and publish the works made with this extension..
 
 ## Prohibitions / 禁則事項
 

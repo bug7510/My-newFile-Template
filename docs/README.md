@@ -1,74 +1,93 @@
-# ファイル作成が楽になる！
+# My newFile Template
 
-Todo：りどみ
+## ファイル作成を可能な限り簡単に
 
-テンプレートから新規ファイルを作成できます。
+**My newFile Template** は、VS Codeにおけるすべての新規ファイル作成体験を向上させるための拡張機能です。自由にカスタマイズ可能なテンプレートを利用して、定型的なファイル作成の手間を大幅に削減し、スムーズな開発が可能になります。
 
+<img alt="firstImpression"  src="./ReadmeResource/ja/firstImpression.gif" width="600">
 
-## Features
+## 特徴
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+* **テンプレートベースのファイル作成:** あらかじめ定義されたテンプレート、またはご自身でカスタマイズしたテンプレートから素早く新しいファイルを作成できます。
+* **高いカスタマイズ性:** プロジェクトの種類や個人の好みに合わせて、テンプレートの内容を自由に変更・追加できます。
+* **簡単な操作:** 直感的なコマンドパレットからの操作で、誰でも簡単に利用を開始できます。
+* **作業効率の向上:** ボイラープレートコードの記述時間を短縮し、本来のコーディング作業に集中できます。
 
-For example if there is an image subfolder under your extension project workspace:
+## 機能
 
-\!\[feature X\]\(images/feature-x.png\)
+### テンプレートによる新規ファイル作成(File from Template)
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+<img alt="how to make file with template"  src="./ReadmeResource/ja/firstImpression.gif" width="600">
+<br><br>
 
-## Requirements
+1. ファイルを作りたいフォルダーを右クリックします。
+2. 右クリックメニューで"テンプレートから作成"を選択します。
+3. テンプレートを選択します。
+4. ファイル名を入力すればファイル作成完了です。
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+### テンプレートの作成(Template from File)
 
-## Extension Settings
+<img alt="how to make template from file"  src="./ReadmeResource/ja/TemplateFromFile.gif" width="600">
+<br><br>
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+1. テンプレートの元となるファイルを右クリックします。
+2. 右クリックメニューで"ファイルからテンプレートを作成"を選択します。
+3. テンプレート設定のウィンドウが表示されるので、適宜編集します。
+4. Saveボタンを押せば、テンプレートが作成でき、新しいファイルをテンプレートから作ることができますます。
 
-For example:
+#### 完全な新規テンプレートを作る(.create)
 
-This extension contributes the following settings:
+既存ファイルを参考にせず、全く新しいテンプレートを作成することも可能です。
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+<img alt="how to make new template"  src="./ReadmeResource/ja/createTemplate.gif" width="600">
+<br><br>
 
-## Known Issues
+1. 拡張機能の設定を開き、"テンプレートの編集"リンクをクリックします。
+2. "新規テンプレートの作成"を選択することで、編集ウィンドウを開くことができます。
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+### ファイル名やフォルダ名を新規ファイルに反映する(filePath)
 
-## Release Notes
+テンプレート編集時に ***{filePath[(何らかの数値)]}*** というキーワードを記述することで、作成するファイルの名前やフォルダの名前を、新規ファイルの内容に反映させることができます。
 
-Users appreciate release notes as you update your extension.
+予測変換が出るので入力に時間はかかりません。
 
-### 1.0.0
+<img alt="how to make template reflecting file name or file path"  src="./ReadmeResource/ja/filePath.gif" width="600">
+<br><br>
+{filePath[0]}はファイル作成時に入力されたファイルの名前(拡張子なし)に、
 
-Initial release of ...
+{filePath[1]}はファイルが作成されるフォルダの名前に置換されます。
 
-### 1.0.1
+{filePath[2]}、{filePath[3]}と数値を増やすことで、もっと上のフォルダの名前を参照することも可能です。(用途があるかはわかりませんが……)
 
-Fixed issue #.
+### 発展的な機能
 
-### 1.1.0
+* 既存テンプレートの編集・複製・削除
+  
+  拡張機能の設定の"テンプレートの編集"リンクをクリックすると、これらの作業が簡単に実行可能です。
 
-Added features X, Y, and Z.
+* 現在のワークスペースで使わないテンプレートを隠す
+  
+  拡張機能の設定の"ワークスペースのテンプレート表示設定"をクリックし、表示したいテンプレートにチェックをつけ、表示したくないテンプレートのチェックを外すことで、ファイル作成時に表示されるテンプレートを制限することができます。
 
----
+  ファイル作成時、現在の作業でほとんど使わないテンプレートがリスト表示されることが防げます。
 
-## Following extension guidelines
+## 追加予定の機能
 
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
+下記の機能の追加を予定しています。
 
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
+* 英語版Readmeの作成
 
-## Working with Markdown
+* カテゴリ機能
+  
+  編集ウィンドウでテンプレートにカテゴリを設定することで、大量のテンプレートの整理が容易になります。
+  ファイル作成時などのリスト表示にもカテゴリが適用され、リストの見た目にまとまりができます。
 
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
+  カテゴリごとに表示/非表示の切り替え、テンプレートの一括削除などができます。
 
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
+  編集ウィンドウ上で表示できるカテゴリ一覧から選択することで、一度設定したカテゴリを新しいテンプレートにも簡単に設定することができます。
 
-## For more information
+* 表示/非表示機能の充実
 
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
+  テンプレートのデフォルト非表示設定や、他のワークスペースでは表示されないテンプレートを作成する機能が実装されることで、ワークスペース単位でのテンプレートの作成、利用もまた、より充実します。
 
-**Enjoy!**
+Display Language--en
