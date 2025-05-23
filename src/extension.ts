@@ -130,14 +130,13 @@ export function activate(context: vscode.ExtensionContext) {
 				// ファイル読み込みなどに失敗した場合のエラーハンドリング
 				if (error instanceof Error) {
 					let errorMessage: string;
-					if (error instanceof TimeoutError) {
+					if (error.name == 'TimeoutError') {
 						errorMessage = error.message;
 					}
 					else {
 						errorMessage = `ファイルの読み込みに失敗しました: ${error.message}`;
 					}
 					vscode.window.showErrorMessage(errorMessage);
-					console.error(`${errorMessage}:}`, error);
 				}
 			}
 		}
