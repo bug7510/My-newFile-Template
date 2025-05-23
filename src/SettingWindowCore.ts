@@ -4,14 +4,13 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { TimeoutError } from './TimeoutError';
-import { clear } from 'console';
 
 const FILENAME = "SettingWindow";
 const PLACEHOLDER = "{cspSource}";
 const SECURITYPOLICY = "{securityPolicy}";
 const HTML_READ_TIMEOUT_MS = 1000; // HTMLファイルの読み込みタイムアウト
 const WEBVIEW_READY_TIMEOUT_MS = 2000; // Webviewがreadyコマンドを送信するまでのタイムアウト
-const WEBVIEW_DATA_RECEIVE_TIMEOUT_MS = 1;//WebviewがdataReceivedコマンドを送信するまでのタイムアウト
+const WEBVIEW_DATA_RECEIVE_TIMEOUT_MS = 100;//WebviewがdataReceivedコマンドを送信するまでのタイムアウト
 const INITIAL_DATA_PROCESSING_TIMEOUT_MS = 10; // initialConfig送信後、WebviewがUI準備完了を通知するまでのタイムアウト
 
 

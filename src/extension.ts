@@ -162,13 +162,13 @@ export function activate(context: vscode.ExtensionContext) {
 			const pickItems = allTemplateConfigs.map(templateConfig => ({
 				label: templateConfig.templateName,
 				description: templateConfig.filename, // 補足情報
-				picked: !(currentHiddenTemplates.includes(templateConfig.templateName)), // ★既に非表示ならチェックマークをつける★
+				picked: !(currentHiddenTemplates.includes(templateConfig.templateName)), // 表示しているならチェックマークをつける
 				templateConfig: templateConfig // 後で使うテンプレート名を保存しておく
 			}));
 
 			const selectedItems = await vscode.window.showQuickPick(pickItems, {
-				placeHolder: 'ワークスペースで非表示/表示を切り替えるテンプレートを選択してください (複数選択可)',
-				canPickMany: true // ★複数選択を許可★
+				placeHolder: '現在のワークスペース上で表示したいテンプレートを選択してください (複数選択)',
+				canPickMany: true // 複数選択を許可
 			});
 
 			if (selectedItems === undefined) return;
