@@ -4,7 +4,7 @@
 
 **My newFile Template** は、VS Codeにおけるすべての新規ファイル作成体験を向上させるための拡張機能です。自由にカスタマイズ可能なテンプレートを利用して、定型的なファイル作成の手間を大幅に削減し、スムーズな開発が可能になります。
 
-<img alt="firstImpression"  src="./ReadmeResource/ja/firstImpression.gif" width="600">
+<img alt="firstImpression"  src="https://github.com/bug7510/newfiletemplate/blob/6178f27759c6c290b61221d86d64f4c4fb739ef2/docs/ReadmeResource/ja/firstImpression.gif?raw=true" width="600">
 
 ## 特徴
 
@@ -17,7 +17,7 @@
 
 ### テンプレートによる新規ファイル作成(File from Template)
 
-<img alt="how to make file with template"  src="./ReadmeResource/ja/firstImpression.gif" width="600">
+<img alt="how to make file with template"  src="https://github.com/bug7510/newfiletemplate/blob/6178f27759c6c290b61221d86d64f4c4fb739ef2/docs/ReadmeResource/ja/firstImpression.gif?raw=true" width="600">
 
 1. ファイルを作りたいフォルダーを右クリックします。
 2. 右クリックメニューで"テンプレートから作成"を選択します。
@@ -26,7 +26,7 @@
 
 ### テンプレートの作成(Template from File)
 
-<img alt="how to make template from file"  src="./ReadmeResource/ja/TemplateFromFile.gif" width="600">
+<img alt="how to make template from file"  src="https://github.com/bug7510/newfiletemplate/blob/fd3fd4fbb3be407b9a7cd8281c7b4543dad97209/docs/ReadmeResource/ja/TemplateFromFile.gif?raw=true" width="600">
 
 1. テンプレートの元となるファイルを右クリックします。
 2. 右クリックメニューで"ファイルからテンプレートを作成"を選択します。
@@ -37,7 +37,7 @@
 
 既存ファイルを参考にせず、全く新しいテンプレートを作成することも可能です。
 
-<img alt="how to make new template"  src="./ReadmeResource/ja/createTemplate.gif" width="600">
+<img alt="how to make new template"  src="https://github.com/bug7510/newfiletemplate/blob/fd3fd4fbb3be407b9a7cd8281c7b4543dad97209/docs/ReadmeResource/ja/createTemplate.gif?raw=true" width="600">
 
 1. 拡張機能の設定を開き、"テンプレートの編集"リンクをクリックします。
 2. "新規テンプレートの作成"を選択することで、編集ウィンドウを開くことができます。
@@ -48,13 +48,13 @@
 
 予測変換が出るので入力に時間はかかりません。
 
-<img alt="how to make template reflecting file name or file path"  src="./ReadmeResource/ja/filePathTemplate.gif" height="250">
+<img alt="how to make template reflecting file name or file path"  src="https://github.com/bug7510/newfiletemplate/blob/fd3fd4fbb3be407b9a7cd8281c7b4543dad97209/docs/ReadmeResource/ja/filePathTemplate.gif?raw=true" height="250">
 
 {filePath[0]}はファイル作成時に入力されたファイルの名前(拡張子なし)に、
 
 {filePath[1]}はファイルが作成されるフォルダの名前に置換されます。
 
-<img alt="newFile with filePath"  src="./ReadmeResource/ja/filePathNewFile.gif" width="600">
+<img alt="newFile with filePath"  src="https://github.com/bug7510/newfiletemplate/blob/fd3fd4fbb3be407b9a7cd8281c7b4543dad97209/docs/ReadmeResource/ja/filePathNewFile.gif?raw=true" width="600">
 
 {filePath[2]}、{filePath[3]}と数値を増やすことで、さらに上の階層のフォルダ名を参照することも可能です。(用途があるかはわかりませんが……)
 
@@ -74,7 +74,7 @@
 
 下記の機能の追加を予定しています。
 
-* 英語版Readmeの作成
+* 英語版の作成
 
 * **カテゴリ機能**
   
