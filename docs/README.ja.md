@@ -5,9 +5,9 @@
 
 [![LICENSE](https://img.shields.io/badge/License-Copyright-blue)](https://github.com/bug7510/My-newFile-Template/blob/develop/docs/LICENSE.md)
 [![version](https://img.shields.io/github/package-json/v/bug7510/My-newFile-Template?logo=github)](https://github.com/bug7510/My-newFile-Template)
-![Release](https://img.shields.io/github/v/release/bug7510/My-newFile-Template?logo=github)
+[![Release](https://img.shields.io/github/v/release/bug7510/My-newFile-Template?logo=github)](https://github.com/bug7510/My-newFile-Template/releases)
 
-<img alt="logo"  src="https://github.com/bug7510/newfiletemplate/blob/develop/Icon-MyNewFileTemplate.png">
+<a href="https://marketplace.visualstudio.com/items?itemName=bug7510.mynewfiletemplate"><img alt="logo"  src="https://github.com/bug7510/newfiletemplate/blob/develop/Icon-MyNewFileTemplate.png?raw=true"></a>
 
 ## ファイル作成を可能な限り簡単に
 
