@@ -11,7 +11,7 @@ const SECURITYPOLICY = "{securityPolicy}";
 const HTML_READ_TIMEOUT_MS = 1000; // HTMLファイルの読み込みタイムアウト
 const WEBVIEW_READY_TIMEOUT_MS = 2000; // Webviewがreadyコマンドを送信するまでのタイムアウト
 const WEBVIEW_DATA_RECEIVE_TIMEOUT_MS = 100;//WebviewがdataReceivedコマンドを送信するまでのタイムアウト
-const INITIAL_DATA_PROCESSING_TIMEOUT_MS = 10; // initialConfig送信後、WebviewがUI準備完了を通知するまでのタイムアウト
+const INITIAL_DATA_PROCESSING_TIMEOUT_MS = 100; // initialConfig送信後、WebviewがUI準備完了を通知するまでのタイムアウト
 
 
 /**

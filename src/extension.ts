@@ -8,6 +8,8 @@ import { showTemplateEditWindow } from './SettingWindowCore'
 import { quickPickChain } from './QuickPickChain';
 import { TimeoutError } from './TimeoutError';
 
+const READFILE_TIMEOUT_MS = 100;
+
 interface pickTemplate extends vscode.QuickPickItem {
 	label: string;
 	description: string;
@@ -85,7 +87,7 @@ export function activate(context: vscode.ExtensionContext) {
 						// 指定時間が経過したら、TimeoutError で Promise を拒否
 						// Promise.race は最初に拒否された Promise の結果を返す
 						reject(new TimeoutError("ファイル読み込みに失敗しました。無効なファイルか、ファイルサイズが大きすぎる可能性があります"));
-					}, 1000);
+					}, READFILE_TIMEOUT_MS);
 				});
 				const readFilePromise = fs.promises.readFile(filePath, 'utf8');
 				//  ファイルの内容を読み込む (非同期) 
@@ -151,7 +153,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 			// 全てのテンプレートを読み込む (非表示設定はまだ考慮しない)
 			const allTemplateConfigs = getTemplatesFromConfig();
-			// ★現在のワークスペース設定から非表示リストを読み込む★
+			// 現在のワークスペース設定から非表示リストを読み込む
 			const currentHiddenTemplates = context.workspaceState.get<string[]>('HiddenArray', []);
 			if (!allTemplateConfigs || allTemplateConfigs.length === 0) {
 				vscode.window.showErrorMessage('設定にファイルテンプレートが定義されていません。非表示/表示設定を行えません。');
