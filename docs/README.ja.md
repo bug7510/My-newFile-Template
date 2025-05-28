@@ -1,11 +1,13 @@
 # My newFile Template
 
 [![Stars](https://img.shields.io/github/stars/bug7510/My-newFile-Template)](https://github.com/bug7510/My-newFile-Template)
-[![GitHub Sponsors](https://img.shields.io/github/sponsors/bug7510)](https://github.com/sponsors/bug7510)
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/bug7510?logo=github)](https://github.com/sponsors/bug7510)
 
 [![LICENSE](https://img.shields.io/badge/License-Copyright-blue)](https://github.com/bug7510/My-newFile-Template/blob/develop/docs/LICENSE.md)
-[![version](https://img.shields.io/github/package-json/v/bug7510/My-newFile-Template)](https://github.com/bug7510/My-newFile-Template)
-![Release](https://img.shields.io/github/v/release/bug7510/My-newFile-Template)
+[![version](https://img.shields.io/github/package-json/v/bug7510/My-newFile-Template?logo=github)](https://github.com/bug7510/My-newFile-Template)
+![Release](https://img.shields.io/github/v/release/bug7510/My-newFile-Template?logo=github)
+
+<img alt="logo"  src="https://github.com/bug7510/newfiletemplate/blob/develop/Icon-MyNewFileTemplate.png">
 
 ## ファイル作成を可能な限り簡単に
 

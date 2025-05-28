@@ -2,6 +2,10 @@
   "name": "mynewfiletemplate",
   "displayName": "My newFile Template",
   "description": "Let newFile more Easy.",
+  "icon": "Icon-MyNewFileTemplate.png",
+  "sponsor": {
+    "url": "https://github.com/sponsors/bug7510"
+  },
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.99.0"
